@@ -1,0 +1,111 @@
+Begin-FUNCTION process_case_distribution_to_drc(case_id, Created_By)
+    TRY:
+        # Establish database connection
+        GET THE DB CONNECTION()
+        IF db is None:
+            RAISE DatabaseConnectionError("Failed to connect to MongoDB")
+
+        # Start MongoDB session and transaction
+        client = db.client
+        session = client.start_session()
+        START TRANSACTION
+
+        # Fetch case details from 'Case_details' collection
+        case_document = FIND ONE FROM db["Case_details"] WHERE case_id = case_id
+        IF case_document is None:
+            RAISE CaseIdNotFoundError("Case ID not found")
+
+        # Extract batch_id from case details
+        case_distribution_batch_id = case_document["case_distribution_batch_id"]
+        IF case_distribution_batch_id is None:
+            RAISE DataFetchError("case_distribution_batch_id not found")
+
+        # Fetch approver details from 'Temp_forwarded_approver'
+        approver_document = FIND ONE FROM db["Temp_forwarded_approver"] WHERE approver_reference = case_distribution_batch_id
+
+        # Fetch DRC details from 'Temp_case_distribution_drc_details'
+        drc_document = FIND ONE FROM db["Temp_case_distribution_drc_details"] WHERE case_id = case_id
+        IF drc_document is None:
+            RAISE DataFetchError("DRC details not found")
+
+        # Retrieve DRC ID (check both new_drc_id and drc_id)
+        drc_id = drc_document["new_drc_id"] OR drc_document["drc_id"]
+
+        # Update 'proceed_on' field in 'Temp_case_distribution_drc_details'
+        UPDATE db["Temp_case_distribution_drc_details"]
+        SET proceed_on = CURRENT_TIMESTAMP
+        WHERE case_id = case_id
+
+        # Extract remark from the approver document if available
+        remark_list = approver_document["remark"] IF approver_document EXISTS ELSE []
+        remark_value = remark_list[0]["remark"] IF remark_list IS NOT EMPTY ELSE None
+
+        # Prepare update data for 'Case_details'
+        UPDATE_DATA = {
+            SET case_current_status = "Open With Agent",
+            PUSH {
+                case_status = { "case_status": "Open With Agent" },
+                drc = {
+                    "DRC_status": "Open With Agent",
+                    "Created_dtm": CURRENT_TIMESTAMP,
+                    "status_dtm": CURRENT_TIMESTAMP,
+                    "drc_id": drc_id
+                },
+                approve = {
+                    "Approval_type": "DRC_Distribution",
+                    "Approved_by": approver_document["approved_deligated_by"] IF EXISTS ELSE None,
+                    "Approved_on": approver_document["created_on"] IF EXISTS ELSE None,
+                    "remark": remark_value
+                }
+            }
+        }
+
+        # Update case details in 'Case_details' collection
+        case_update_result = UPDATE db["Case_details"]
+        SET UPDATE_DATA
+        WHERE case_id = case_id
+        IF case_update_result.modified_count == 0:
+            RAISE DocumentUpdateError("Error updating case details")
+
+        # API Call to fetch case phase
+        TRY:
+            response = API_CALL("get_case_phase", params={"case_status": "Open With Agent"})
+            response_json = PARSE_JSON(response)
+            case_phase = response_json["case_phase"] OR "Unknown Phase"
+        EXCEPT API_ERROR:
+            case_phase = "Unknown Phase"
+
+        # Determine case monitoring expiration date (3 months ahead)
+        created_dtm = CURRENT_TIMESTAMP
+        monitor_expir_dtm = get_last_day_of_month(created_dtm + 3 months)
+
+        # Insert case monitoring log
+        INSERT INTO db["Case_Monitor_Log"] (case_id, Created_dtm, Case_Phase, Monitor_Expir_Dtm, Last_Monitor_Dtm)
+        VALUES (case_id, created_dtm, case_phase, monitor_expir_dtm, CURRENT_TIMESTAMP)
+
+        # Insert record into 'Case_Monitor'
+        INSERT INTO db["Case_Monitor"] (case_id, Created_dtm, Created_By, Case_Phase, Monitor_Expir_Dtm, Last_Monitor_Dtm, Last_Requested_On)
+        VALUES (case_id, created_dtm, Created_By, case_phase, monitor_expir_dtm, CURRENT_TIMESTAMP, NULL)
+
+        # Commit transaction
+        COMMIT TRANSACTION
+        RETURN "Case updated and Monitor records inserted successfully"
+
+    EXCEPT BaseCustomException AS e:
+        LOG ERROR
+        IF TRANSACTION ACTIVE: ABORT TRANSACTION
+        RAISE e
+
+    EXCEPT DatabaseError AS e:
+        LOG ERROR
+        IF TRANSACTION ACTIVE: ABORT TRANSACTION
+        RAISE DatabaseConnectionError("Database operation failed")
+
+    EXCEPT ANY OTHER ERROR AS e:
+        LOG ERROR
+        IF TRANSACTION ACTIVE: ABORT TRANSACTION
+        RAISE e
+
+    FINALLY:
+        END SESSION
+        CLOSE DATABASE CONNECTION
