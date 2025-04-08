@@ -43,7 +43,6 @@ from fastapi import FastAPI
 from openAPI_IDC.routes.case_distribution_to_drc_routes import router
 import uvicorn
 from utils.logger.loggers import get_logger
-from openAPI_IDC.coreFunctions.config_manager import initialize_hash_maps
 
 logger = get_logger('CPY-1P03')
 

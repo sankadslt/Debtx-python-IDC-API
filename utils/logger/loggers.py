@@ -1,10 +1,10 @@
 import logging
 from logging import config
 
-from utils.filePath.filePath import get_filePath
+from utils.get_roots_paths.get_roots_paths import get_logger_filePath
 
 def setup_logging():
-    config_file = get_filePath("logConfig")
+    config_file = get_logger_filePath()
 
     try:
         config.fileConfig(config_file)

@@ -57,6 +57,7 @@ router = APIRouter()
              description="""**Mandatory fields**<br>
              - `case_id (Path Parameter)`<br>
              - `Created_By(Query Parameter, defaults to '"admin_user"')`<br>""")
+
 async def approved_case_distribution_to_drc_endpoint(case_id: int , Created_By:str=Query("admin_user",description="User who Approved the record to distribute to DRC(defaults to admin_user)")):   
     """
     API endpoint to process approved case distribution to DRC.

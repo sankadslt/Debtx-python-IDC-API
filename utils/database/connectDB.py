@@ -1,42 +1,70 @@
+import configparser
 from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure
+import os
 from utils.logger.loggers import get_logger
-from utils.custom_exceptions.cust_exceptions import NoValidDataError
-from openAPI_IDC.coreFunctions.config_manager import get_config  # Ensure this function is working properly
+from utils.custom_exceptions.cust_exceptions import DatabaseConnectionError
+from utils.get_roots_paths.get_roots_paths import get_config_filePath #import get_project_root drs_config.ini
 
-logger = get_logger("DB_Logger")
+# Initialize logger
+logger = get_logger("database_logger")
 
+# Read configuration from databaseConfig.ini file
 def get_db_connection():
-    """Retrieve database connection from the hash map."""
+    """
+    Establishes a connection to the MongoDB database using the configuration file.
+
+    - Reads the MongoDB URI and database name from the databaseConfig.ini file.
+    - Validates the presence of the configuration file and required fields.
+    - Establishes a connection to the MongoDB database and returns the database object.
+
+    :return: MongoDB database object.
+    :raises Exception: If the configuration file is missing or connection fails.
+    """
     try:
-        # Fetch database configuration from the hash map
-        db_config = get_config("database","database")
-        
-        logger.info(f"Database Config:{db_config}")
+        config_path = get_config_filePath()  # Get the path to the config file
+        logger.info(f"Reading configuration file from: {config_path}")  # Debugging log
+        if not os.path.exists(config_path):
+            logger.error(f"Configuration file '{config_path}' not found.")
+            raise FileNotFoundError(f"Configuration file '{config_path}' not found.")
 
-        if not db_config:
-            raise NoValidDataError("DATABASE configuration not found in hash map.")
+        config = configparser.ConfigParser()
+        config.read(config_path)
 
-        # Retrieve MongoDB connection details
-        mongo_uri = db_config.get("mongo_uri", "").strip()
-        db_name = db_config.get("db_name", "").strip()
+        if 'MONGODB' not in config:
+            logger.error("'MONGODB' section not found in databaseConfig.ini")
+            raise ValueError("'MONGODB' section not found in databaseConfig.ini")
 
-        # Ensure values are valid
+        mongo_uri = config['MONGODB'].get('MONGO_URI', '').strip()
+        db_name = config['MONGODB'].get('DATABASE_NAME', '').strip()
+
         if not mongo_uri or not db_name:
-            raise NoValidDataError("Invalid MongoDB URI or database name.")
-    
-        # Connect to MongoDB
-        client = MongoClient(mongo_uri,serverSelectionTimeoutMS=5000)
-        
-        client.server_info()  # Trigger an exception if the connection fails
+            logger.error("Missing MONGO_URI or DATABASE_NAME in databaseConfig.ini")
+            raise ValueError("Missing MONGO_URI or DATABASE_NAME in databaseConfig.ini")
+
+        client = MongoClient(mongo_uri)
         db = client[db_name]
-        logger.info(f"Connected to MongoDB successfully | Database name: {db_name}")
         return db
-
-    except NoValidDataError:
-        logger.error("No valid data found")
-        return False
-
     except Exception as e:
         logger.error(f"Error connecting to MongoDB: {e}")
-        return False
+        raise DatabaseConnectionError(f"Error connecting to MongoDB: {e}")
+
+# Get a specific collection
+def get_mongo_collection(collection_name):
+    """
+    Retrieves a specific MongoDB collection.
+
+    - Uses the get_db_connection function to establish a connection to the database.
+    - Fetches the specified collection from the connected database.
+
+    :param collection_name: Name of the MongoDB collection to fetch.
+    :return: MongoDB collection object.
+    :raises Exception: If the database connection fails.
+    """
+    try:
+        # Use the get_db_connection function to establish the database connection
+        db = get_db_connection()
+        logger.info(f"Connected to MongoDB database: {db.name}")
+        return db[collection_name]
+    except Exception as e:
+        logger.error(f"Failed to connect to MongoDB: {e}")
+        raise DatabaseConnectionError(f"Failed to connect to MongoDB: {e}")

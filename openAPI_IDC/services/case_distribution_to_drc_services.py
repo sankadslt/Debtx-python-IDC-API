@@ -47,7 +47,6 @@ import requests
 from dateutil.relativedelta import relativedelta
 from utils.get_last_day_of_month.get_last_day_of_month import get_last_day_of_month
 from pymongo import MongoClient
-from openAPI_IDC.coreFunctions.config_manager import initialize_hash_maps
 from utils.custom_exceptions.cust_exceptions import CaseIdNotFoundError, DataFetchError, DocumentUpdateError , DatabaseConnectionError, BaseCustomException ,ValidationError
 from utils.database.connectDB import get_db_connection 
 from utils.logger.loggers import get_logger
@@ -55,7 +54,7 @@ from utils.api.connectAPI import read_api_config
 import traceback
 import json
 
-initialize_hash_maps()
+
 
 api_url = read_api_config()
 
@@ -183,6 +182,7 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
              #region- Insert record into Case_Monitor_Log & Case_Monitor begin
             case_monitor_log_collection = db["Case_Monitor_Log"]
             case_monitor_log_collection.insert_one({
+                "doc_version":1.0,
                 "case_id": case_id,
                 "Created_dtm": created_dtm,
                 "Case_Phase": case_phase, 
@@ -195,6 +195,7 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
             # Insert record into Case_Monitor
             case_monitor_collection = db["Case_Monitor"]
             case_monitor_collection.insert_one({
+                "doc_version":1.0,
                 "case_id": case_id,
                 "Created_dtm": created_dtm,
                 "Created_By": Created_By,
