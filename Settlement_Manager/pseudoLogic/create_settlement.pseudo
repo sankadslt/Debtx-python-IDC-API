@@ -1,0 +1,90 @@
+"""
+API : SET-2P01
+Name : Create Settlement Plan
+Description : Create a new settlement plan and add it to the database
+Created By : Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
+Created No :
+Version: 1.0
+IP :  settlement_id
+      created_by
+      created_on
+      settlement_phase
+      settlement_status
+      status_dtm
+      settlement_type
+      settlement_amount
+      last_monitoring_dtm
+      settlement_plan_received[]
+      settlement_plan[]
+      settlement_occurred[]
+      expire_date
+      case_id
+      ro_id
+OP : None
+*/
+"""
+
+"""
+    Version: Python 3.12.4
+    Dependencies: Library
+    Related Files: product_manager.py, product_manager_class.py, dateTimeValidator.py
+    Purpose: 
+    Version:
+        version: 1.0
+        Last Modified Date: 2024-04-06
+        Modified By: Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)  
+        Changes:     
+
+    Notes: The logic for the settlement plan creation is implemented in the create_settlement_class.py file.
+"""
+
+BEGIN
+    try{
+        Read parameters: settlement_id, created_by, created_on, settlement_phase, settlement_status, status_dtm, settlement_type, settlement_amount, last_monitoring_dtm, settlement_plan_received[], settlement_plan[], settlement_occurred[], expire_date, case_id, ro_id;
+        
+        // Validate the input parameters
+        if case_id is null:
+            raise customise exception "Case ID can not be null";
+        if case_id not in db:
+            raise customise exception "Case ID not found in db";
+        if ro_id is null:
+            raise customise exception "RO ID can not be null";
+        if ro_id not in db:
+            raise customise exception "RO ID not found in db";
+        if settlement_phase is null:
+            raise customise exception "Settlement Phase can not be null";
+        if settlement_status is null:
+            raise customise exception "Settlement Status can not be null";
+        if settlement_type is null:
+            raise customise exception "Settlement Type can not be null";
+        
+        //Check if the settlement ID already exists in the database
+        if settlement_id in db:
+            raise customise exception "Settlement ID already exists in db";
+
+        else:
+        //For Type A, settlement_plan_received should be (initial amount, total months) 
+        if settlement_type == "Type A":
+            if settlement_plan_received.length != 2:
+                raise customise exception "Settlement Plan Received for Type A should be of length 2";
+
+        //For Type B, settlement_plan_received should be (initial amount, list of installment amounts)
+        if settlement_type == "Type B":
+            if settlement_plan_received.length < 2:
+                raise customise exception "Settlement Plan Received for Type B should be of length greater than 2";
+
+        //Add the details to the settlement_plan database
+        settlement_plan.insert(settlement_id, created_by, created_on, settlement_phase, settlement_status, status_dtm, settlement_type, settlement_amount, last_monitoring_dtm, settlement_plan_received[], settlement_plan[], settlement_occurred[], expire_date, case_id, ro_id);
+
+        //Add the details to the settlement database
+        settlement.insert(settlement_id, created_by, created_on, settlement_phase, settlement_status, status_dtm, settlement_type, settlement_amount, last_monitoring_dtm, settlement_plan_received[], settlement_plan[], settlement_occurred[], expire_date, case_id, ro_id);
+
+    } catch customise exception(err) {
+        status = error;
+        status_description = err.description; 
+    }catch(err) {
+        status = error;
+        status_description = err.description;
+    }
+
+END
