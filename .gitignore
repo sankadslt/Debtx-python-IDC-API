@@ -5,7 +5,7 @@ __pycache__/
 *.pyd
 
 # Virtual environment
-env/
+.env
 venv/
 ENV/
 env.bak/
@@ -17,12 +17,6 @@ venv.bak/
 # PyCharm settings
 .idea/
 
-.testArea/
-
-.bin/
-
-
-
-
-
-
+testArea/
+requests.http
+loggers/

@@ -1,0 +1,101 @@
+/*
+API # : INC-1P07
+Name : Product Detail Manager
+Description : Update external product details in the incident or insert new product details in the incident
+Created By : Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
+Created No :
+Version: 1.0
+IP : case id, account no, product details[]
+OP : None
+*/
+
+"""
+    Version: Python 3.12.4
+    Dependencies: Library
+    Related Files: product_manager.py, product_manager_class.py, dateTimeValidator.py
+    Purpose: 
+    Version:
+        version: 1.0
+        Last Modified Date: 2024-01-26
+        Modified By: Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)  
+        Changes:     
+
+    Notes:
+"""
+
+
+BEGIN
+    try {
+        //Read the parameters
+        Read parameters: case_id, account_no, product_details[];
+
+        validation:
+            if case_id is null:
+                raise customise exception "Case ID can not null";
+            if account_no is null:
+                raise customise exception "Account No can not null";
+            if product_details is null:
+                raise customise exception "Product Details can not null";
+
+            if typeof(case_id) != 'int':
+                raise customise exception "case id should be an int";    
+
+            if typeof(account_no) != 'string':
+                raise customise exception "Account No should be a string";
+
+            if typeof(product_details) != 'array':
+                raise customise exception "Product Details should be an array";
+            
+            //recieved product details
+            for elements in product_details:
+                for element in elements:
+                    if element == "product_seq" && typeof(element) != 'int':
+                        raise customise exception "Product Seq should be an int";
+                    
+                    if element == "product_status"
+                        if element not in ['OK', 'SU', 'TX', 'PE']:
+                            raise customise exception "Invalid Product Status";
+
+        //Get case details from the db                  
+        Read case details by using case_id;
+        
+        if case details is null:
+            raise customise exception "Case not found";
+
+        //Get the incident id from case details
+        Read incident id from case details;
+        
+        if incident id is null:
+            raise customise exception "Incident ID not found";
+
+        //Get the incident details from the db
+        Read incident details by using incident id;
+        
+        if incident details is null:
+            raise customise exception "Incident not found";
+
+        //Get the product details from the incient details
+        existing_product_details = Read found_product_details in incident details;
+        
+        if found_product_details is null:
+            raise customise exception "Product Details not found";
+
+        //Check if the recieved product details are already in the db    
+        for elements in found_product_details:
+            Check if elements is in existing_product_details;
+
+            if elemments in existing product details:
+                //do not update if old product_status == new product_status;
+                update product details in existing product details;
+            else:
+                // if already not in the db, add as a new product
+                insert new product details in product details in db;
+
+    } catch customise exception(err) {
+        status = error;
+        status_description = err.description; 
+    }catch(err) {
+        status = error;
+        status_description = err.description;
+    }
+END
