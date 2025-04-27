@@ -43,7 +43,7 @@ from fastapi import FastAPI
 from openAPI_IDC.routes.case_distribution_to_drc_routes import router
 import uvicorn
 from utils.logger.loggers import get_logger
-from utils.coreUtils import load_config
+from utils.config_loader import config
 
 logger = get_logger('CPY-1P03')
 
@@ -64,8 +64,7 @@ def main():
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
     
     try:
-        config_values = load_config()
-        print("Configuration values hash map: ", config_values)
+        print("Configuration values: ", config.__dict__)
         logger.info("Configuration loaded successfully")
     except Exception as e:
         logger.exception(f"Failed to load configuration values: {e}")

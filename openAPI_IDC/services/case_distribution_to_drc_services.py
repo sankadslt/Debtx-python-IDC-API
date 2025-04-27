@@ -48,16 +48,13 @@ from dateutil.relativedelta import relativedelta
 from utils.get_last_day_of_month.get_last_day_of_month import get_last_day_of_month
 from pymongo import MongoClient
 from utils.custom_exceptions.cust_exceptions import CaseIdNotFoundError, DataFetchError, DocumentUpdateError , DatabaseConnectionError, BaseCustomException ,ValidationError
-from utils.coreUtils import load_config
+from utils.config_loader import config
+from utils.db import db ,mongo_client
 from utils.logger.loggers import get_logger
 import traceback
 import json
 
 
-
-config_values =load_config()
-
-api_url = config_values.get("api_url")
 
 logger = get_logger("CPY-1P03")
 
@@ -68,20 +65,18 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
     """
     logger.info(f"Processing case distribution to DRC for case_id: {case_id}")
     
-    db_client = None
     session = None
     
     try:
-        db_client=MongoClient(config_values["mongo_uri"])
-        database = db_client[config_values["database_name"]]
-        logger.info("Connected to MongoDB database Successfully")
+
+        logger.info("Connected to MongoDB db Successfully")
         
-        session = db_client.start_session()
+        session = mongo_client.client.start_session()
         
         with session.start_transaction():
              #region- Fetching data from collections begin
              
-            case_details_collection = database["Case_details"]
+            case_details_collection = db.Case_details
             case_document = case_details_collection.find_one({"case_id": case_id}, session=session)
             if not case_document:
                 raise CaseIdNotFoundError(f"Case ID {case_id} not found")
@@ -92,11 +87,11 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
                 raise DataFetchError(f"case_distribution_batch_id not found for case details {case_id}")
             
               # Fetch approver details
-            approver_collection = database["tmp_forwarded_approver"]
+            approver_collection = db.tmp_forwarded_approver
             approver_document = approver_collection.find_one({"approver_reference": case_distribution_batch_id}, session=session)
             
             # Fetch DRC details
-            drc_collection = database["Tmp_Case_Distribution_DRC_Details"]
+            drc_collection = db.Tmp_Case_Distribution_DRC_Details
             drc_document = drc_collection.find_one({"case_id": case_id}, session=session)
 
             if not drc_document:
@@ -148,7 +143,7 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
             
               # API Call Handling to fetch case phase
             try:
-                response = requests.get(api_url, params={"case_status": "Open With Agent"},timeout=10)
+                response = requests.get(config.get_case_phase_endpoint, params={"case_status": "Open With Agent"},timeout=10)
                 
                  # Raise an exception for HTTP errors (e.g., 4xx or 5xx)
                 response.raise_for_status()
@@ -168,7 +163,7 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
                     
             except requests.Timeout:
                 logger.error("Request timed out")
-                raise ValidationError("Request timed out while fetching case phase")
+                raise ValidationError(f"Request timed out while fetching case phase:{str(e)}")
                      
             except requests.RequestException as e:
                 logger.error(f"Failed to fetch case phase: {str(e)}")
@@ -183,7 +178,7 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
             monitor_expir_dtm = get_last_day_of_month(created_dtm + relativedelta(months=3))
             
              #region- Insert record into Case_Monitor_Log & Case_Monitor begin
-            case_monitor_log_collection = database["Case_Monitor_Log"]
+            case_monitor_log_collection = db.Case_Monitor_Log
             case_monitor_log_collection.insert_one({
                 "doc_version":1.0,
                 "case_id": case_id,
@@ -196,7 +191,7 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
             logger.info(f"Case monitor log inserted for case_id: {case_id}")
             
             # Insert record into Case_Monitor
-            case_monitor_collection = database["Case_Monitor"]
+            case_monitor_collection = db.Case_Monitor
             case_monitor_collection.insert_one({
                 "doc_version":1.0,
                 "case_id": case_id,
@@ -217,26 +212,23 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
 
     except BaseCustomException as e:
         logger.error(f"Custom Exception: {str(e)}")
-        if session.in_transaction:
+        if session and session.in_transaction:
             logger.error(f"Rolling back transaction due to custom exception  [{str(e)}] for case id : {case_id}")
             session.abort_transaction()
         raise 
     
     except PyMongoError as e:
         logger.error(f"Database Error: {str(e)}")
-        if session.in_transaction:
-            logger.error(f"Rolling back transaction due to database error for case id: {case_id}")
+        if session and session.in_transaction:
+            logger.error(f"Rolling back transaction due to db error for case id: {case_id}")
             session.abort_transaction()
         raise DatabaseConnectionError("Database operation failed")
 
     except Exception as e:
         logger.error(f"Unexpected error [{type(e).__name__}]: {str(e)}")
-        if session.in_transaction:
+        if session and session.in_transaction:
             logger.error(f"Rolling back transaction due to unexpected error for case id: {case_id}")
             session.abort_transaction()
         raise 
     
-    finally:
-        if db_client is not None:
-            session.end_session()
-            db_client.close()
+
