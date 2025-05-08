@@ -1,0 +1,18 @@
+General purpose - Case distribution to DRC (CPY-1P03)
+
+API input parameter -case_id , Created_By(optional-default system_user)
+
+
+OUTPUT 
+-*Status Changes,Updating drc & approve arrays , Inserting Documents
+
+Operation :       *Update case status to 'open with agent'
+                  *add DRC
+                  *insert approval details
+                  *register drc Monitor 
+
+Collections:      *Case_details-                        -Write
+                  *tmp_forwarded_approver               -Read
+                  *Temp_Case_Distribution_DRC_Details   -Read & write
+                  *Case_Monitor_log                     -Write 
+                  *Case_Monitor                         -Write                  

@@ -20,7 +20,7 @@ Collections:      *Case_details-                        -Write
                   *Case_Monitor_log                     -Write 
                   *Case_Monitor                         -Write
                   
-                  *Collections Names Changed from Template to Temp as per the Documentation
+                  
 
 */    
 """
