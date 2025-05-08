@@ -1,38 +1,19 @@
 from pymongo import MongoClient
-from openAPI_IDC.coreFunctions.config_manager import get_config
-from utils.customerExceptions.cust_exceptions import NoValidDataError
-from utils.logger.loggers import get_logger
+from Config.database.DB_Config import MONGO_URI,DB_NAME
+# from logger.loggers import get_logger
+from logging import getLogger
 
-# Get the logger
-logger = get_logger("System_logger")
+logger = getLogger("Money_Manager")
 
 def get_db_connection():
-    """Retrieve database connection from the hash map."""
     try:
-        # Fetch database configuration from the hash map
-        db_config = get_config("database", "DATABASE")
-
-        if not db_config:
-            raise NoValidDataError("DATABASE configuration not found in hash map.")
-
-        # Retrieve MongoDB connection details
-        mongo_uri = db_config.get("mongo_uri", "").strip()
-        db_name = db_config.get("db_name", "").strip()
-
-        # Ensure values are valid
-        if not mongo_uri and not db_name:
-            raise NoValidDataError("Invalid MongoDB URI or database name.")
-
-        # Connect to MongoDB
-        client = MongoClient(mongo_uri)
-        db = client[db_name]
-        logger.info(f"Connected to MongoDB successfully | Database name: {db_name}")
+        client = MongoClient(MONGO_URI)
+        db = client[DB_NAME]
+        logger.info("MongoDB connection established Successfully")
         return db
-
-    except NoValidDataError:
-        logger.error("No valid data found")
-        return False
-
     except Exception as e:
-        logger.error(f"Error connecting to MongoDB: {e}")
-        return False
+        logger.debug(f"An error occurred while connecting to the database: {e}")
+        return None
+
+# if __name__ == "__main__":
+#     get_db_connection()    

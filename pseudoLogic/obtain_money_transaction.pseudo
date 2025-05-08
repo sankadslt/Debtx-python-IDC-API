@@ -1,0 +1,186 @@
+/*
+API : C-1P48
+Name : Obtain Money Transaction
+Description : Get all money related transactions
+Created By : Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
+Created No :
+Version: 1.0
+IP : case_id, money_transaction_ref, case_phase, drc_id, money_transaction_type, money_transaction_date 
+OP : None
+*/
+
+"""
+    Version: Python 3.12.4
+    Dependencies: Library
+    Related Files: obtain_money_transaction.py, obtain_money_transaction_class.py
+    Purpose: 
+    Version:
+        version: 1.0
+        Last Modified Date: 2024-02-21
+        Modified By: Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)  
+        Changes:     
+
+    Notes:
+"""
+
+BEGIN
+
+    try{
+
+        //validate request data
+        validation:
+            // in model validations
+            if money_transaction_ref is null:
+                raise customise exception "Money Transaction Ref can not null";
+        
+            if case_phase is null:
+                raise customise exception "Case Phase can not null";
+            if case_phase not in ["Negotiation", "Mediation Board", "LOD", "Litigation", "WRIT"]:
+                raise customise exception "Invalid Case Phase"; 
+                
+            if drc_id is null:
+                raise customise exception "DRC ID can not null";  
+                
+            if money_transaction_type is null:
+                raise customise exception "Money Transaction Type can not null";
+            if money_transaction_type not in ["Bill","Adjustment","Dispute","Cash","Cheque","Return Cheque","Bank Transfer","Cash Deposit","Bank Deposit","Bank Withdrawal","Bank Charges","Bank Interest","Bank Reversal","Bank Adjustment","Bank Return","Bank Return Charges","Bank Return Interest","Bank Return Reversal","Bank Return Adjustment","Bank Return Deposit","Bank Return Withdrawal","Bank Return Cash","Bank Return Cheque","Bank Return Bank Transfer","Bank Return Bank Charges","Bank Return Bank Interest","Bank Return Bank Reversal","Bank Return Bank Adjustment","Bank Return Bank Deposit","Bank Return Bank Withdrawal","Bank Return Bank Return","Bank Return Bank Return Charges","Bank Return Bank Return Interest","Bank Return Bank Return Reversal","Bank Return Bank Return Adjustment","Bank Return Bank Return Deposit","Bank Return Bank Return Withdrawal","Bank Return Bank Return Cash","Bank Return Bank Return Cheque","Bank Return Bank Return Bank Transfer","Bank Return Bank Return Bank Charges","Bank Return Bank Return Bank Interest","Bank Return Bank Return Bank Reversal","Bank Return Bank Return Bank Adjustment","Bank Return Bank Return Bank Deposit","Bank Return Bank Return Bank Withdrawal","Bank Return Bank Return Bank Return"]:
+                raise customise exception "Invalid Money Transaction Type";
+
+            //validations    
+            //Check if the money_transaction_ref already exists in the db
+            existing_money_transaction_ref = Read money_transaction by using money_transaction_ref;
+            if existing_money_transaction_ref is not null:
+                raise customise exception "Money Transaction already exists";
+
+            //validation if the case does not exist
+            existing_case = Read case_datails by using the case_id;
+            if existing_case is null:
+                raise customise exception "Case does not exist in case details";    
+
+            //validation if the settlement is already completed
+            get_settlement = Read settlement by using case_id;
+            if get_settlement["settlement_status"] is "Completed": 
+                raise customise exception "Settlement already completed"
+                
+            //check settlement phase in get_settlement    
+            if get_settlement["settlement_phase"] not in ["Negotiation", "Mediation Board"]:
+                commission_eligible = False
+
+
+        if request.case_phase is not in ["Negotiation", "Mediation Board"]:
+            commission_eligible = False
+            commission_type = "No Commission"
+        
+        //get settlement plan
+        if get_settlement and "settlement_plan" in get_settlement:
+                existing_settlement_plan = Get settlement_plan from get_settlement
+        
+        //Check if the case_id of the transaction exists in the db (To determnine if it is a new case or an existing case)
+        existing_case = Read money_transaction collection by using case_id;
+        if existing_case:
+
+            // variables_by_money_transaction_type function calculates and returns running_credit, running_debt, cumulative_settled_balance
+            //This is needed to determine the commission type
+            cumulative_settled_balance = variables_by_money_transaction_type(existing_case, request)[2] 
+
+            //Find the installment_seq where cumulative_settled_balance matches accumulated_amount
+            //determine instament_seq
+            for plan in existing_settlement_plan:
+                if cumulative_settled_balance <= plan["accumulated_amount"] :
+                    installment_seq = plan["installment_seq"]
+                    
+                    //Determine commission type
+                    if cumulative_settled_balance == plan["accumulated_amount"] and installment_seq == 1 and commission_eligible:
+                        commission_type = "Commissioned" 
+                    elif installment_seq > 1 and commission_eligible:
+                        commission_type = "Commissioned"
+                    else:
+                        commission_type = "Unresolved Commission" if commission_eligible else "No Commission"    
+                    break
+            
+            //This to assign the cumulative_settled_balance to 0 if the money_transaction_type is "Bill" or "Return Cheque"        
+            cumulative_settled_balance = cumulative_settled_balance if request.money_transaction_type not in ["Bill", "Return Cheque"] else 0
+            
+            //Determine commission_amount and commission_seq
+            if existing_case money_transaction_type not in ["Bill","Return Cheque"] and commission_eligible:
+                commissioned_amount = cumulative_settled_balance - existing_case["cumulative_settled_balance"]
+                commission_seq = existing_case["bonus_1"] + 1 if existing_case["bonus_1"] is not None else 1
+
+            if existing_case money_transaction_type in ["Bill","Return Cheque"] and commission_eligible:
+                //sorted latest_valid_transaction by created_dtm
+                latest_valid_transaction = Read latest valid transaction by using case_id and settlement_id where money_transaction_type is not "Bill" or "Return Cheque"
+
+                if latest_valid_transaction:
+                    commissioned_amount = cumulative_settled_balance - latest_valid_transaction["cumulative_settled_balance"]
+                    commission_seq = latest_valid_transaction["bonus_1"] + 1 if latest_valid_transaction["bonus_1"] is not None else 1
+
+                else:
+                    commissioned_amount = cumulative_settled_balance
+                    commission_seq = 1
+                    
+            created_dtm = Get current date and time
+            year_month_formted = Get current date and time in year-month format
+
+            assign determined values to the money_transaction model
+
+            completion = False
+            //Determine if the settlement is completed and set bonus
+            if cumulative_settled_balance >= get_settlement["settlement_amount"]:
+                completion = True
+                transaction_data["bonus_2"] = year_month_format
+            
+                //add bonus and commissions to the collection
+            if commission_type != "No commission":
+                //Check if the first settlement is completed
+                first_settlement = add_to_drc_bonus(request.money_transaction_type, commission_type, created_dtm, request.settlement_id, request.case_id, request.ro_id, request.money_transaction_amount, installment_seq, request.money_transaction_id, completion, request.money_transaction_amount)
+                add_to_commission(request.case_id, request.money_transaction_id, commission_type, request.money_transaction_amount, request.drc_id, request.ro_id)
+                if first_settlement:
+                    transaction_data["bonus_1"] = year_month_format  
+
+            //Insert the money transaction details into the db (Already existing case)
+            Insert money transaction details into the db;
+
+            //If the settlement is completed, update the settlement status
+            if completion and request.money_transaction_type is not "Cheque":
+                //update the statuses to completed
+                update_db_status(db, request) 
+
+            //If the settlement is completed and the money transaction type is "Cheque", call Cheque_payment_for_completing_settlement function    
+            if completion and request.money_transaction_type == "Cheque":
+                //This will keep monitoring for return cheques
+                Cheque_payment_for_completing_settlement(created_dtm, request)    
+            
+            return {"message": "Obtained Money Transaction added successfully - existing case"}  
+            
+            
+        else:
+            //Insert the money transaction details into the db process (New case)
+            
+            //Check if the agent has visited the client
+            negotiation = Read negotiation by using drc_id;
+            if negotiation:
+                negotiation_dtm = Read negotiation_dtm in negotiation;
+
+                if money_transaction_date < negotiation_dtm && commission_eligible:
+                    commission_type = "Pending Commission"
+                else:
+                    commission_type = "Commissioned"
+
+                //Assign new values and Insert the money transaction details into the db    
+                Insert money transaction details into the db;    
+
+            else:
+                //Insert the money transaction details into the db
+                Insert money transaction details into the db;
+
+            return {"message": "Obtained Money Transaction added successfully - New case"}     
+
+    } catch customise exception(err) {
+        status = error;
+        status_description = err.description; 
+    }catch(err) {
+        status = error;
+        status_description = err.description;
+    }
+
+END

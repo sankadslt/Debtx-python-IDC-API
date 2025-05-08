@@ -1,0 +1,25 @@
+{
+    "filePaths": [
+        {
+            "description": "Example configuration file",
+            "paths": {
+                "windows": "C:\\Users\\YourName\\Documents\\example.txt",
+                "linux": "/home/yourname/documents/example.txt"
+            }
+        },
+        {
+            "description": "Log file path",
+            "paths": {
+                "windows": "C:\\ProgramData\\Logs\\application.log",
+                "linux": "/var/log/application.log"
+            }
+        },
+        {
+            "description": "Configuration file path",
+            "paths": {
+                "windows": "C:\\AppData\\Config\\settings.json",
+                "linux": "/etc/app/config/settings.json"
+            }
+        }
+    ]
+}

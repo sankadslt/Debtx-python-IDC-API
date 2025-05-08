@@ -1,15 +1,10 @@
+pika
+pymongo
 pandas
 numpy
 openpyxl
-dateutil
-pymongo
 requests
 fastapi
 uvicorn
 motor
 pydantic
-configparser
-sqlalchemy
-email-validator
-pytest
-httpx
