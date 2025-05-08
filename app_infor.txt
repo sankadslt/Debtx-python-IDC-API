@@ -1,0 +1,155 @@
+"""
+API :  C-1P48
+Name : Obtain Money Transaction
+Description : Get all money related transactions (Check RO-Negotiation, Settlement Plan)
+Created By :  Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
+Created No :
+Version: 1.0
+IP :  money_transaction_id
+      case_id
+      account_num
+      settlement_id
+      money_transaction_type  
+      money_transaction_ref
+      money_transaction_amount
+      money_transaction_date
+      bill_payment_status
+      case_phase
+      drc_id
+      ro_id
+        
+OP : None
+"""
+
+"""
+    Version: Python 3.12.4
+    Dependencies: Library
+    Related Files: obtain_money_transaction.py
+    Purpose:    
+    Version:
+        version: 1.0
+        Last Modified Date: 2025-03-23
+        Modified By: Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)  
+        Changes:     
+
+    Notes:
+"""
+
+"""
+API : C-1P48
+Name : Obtain Money Transaction
+Description : Get all money related transactions - add commissions (Check RO-Negotiation, Settlement Plan)
+Created By : Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
+Created No :
+Version: 1.0
+IP : case_id, 
+     money_transaction_id, 
+     commission_type, 
+     commissioning_amount, 
+     drc_id, 
+     ro_id
+        
+OP : None
+"""
+
+"""
+    Version: Python 3.12.4
+    Dependencies: Library
+    Related Files: add_commission.py
+    Purpose: 
+    Version:
+        version: 1.0
+        Last Modified Date: 2025-03-23
+        Modified By: Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)  
+        Changes:     
+
+    Notes:
+"""
+
+"""
+API : C-1P48
+Name : Obtain Money Transaction
+Description : Get all money related transactions (Check RO-Negotiation, Settlement Plan)
+Created By : Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
+Created No :
+Version: 1.0
+IP : money_transaction_type, 
+     created_dtm, 
+     case_id, 
+     ro_id, 
+     commissioned_amount, 
+     agent_month, 
+     money_transaction_id, 
+     completion, 
+     money_transaction_amount
+        
+OP : None
+"""
+
+"""
+    Version: Python 3.12.4
+    Dependencies: Library
+    Related Files: add_drc_bonus.py
+    Purpose: 
+    Version:
+        version: 1.0
+        Last Modified Date: 2025-03-23
+        Modified By: Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)  
+        Changes:     
+
+    Notes:
+"""
+
+
+"""
+API : C-1P48
+Name : Obtain Money Transaction
+Description : Get all money related transactions (Check RO-Negotiation, Settlement Plan)
+Created By : Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
+Created No :
+Version: 1.0
+IP : created_dtm, request
+        
+OP : None
+"""
+
+"""
+    Version: Python 3.12.4
+    Dependencies: Library
+    Related Files: manage_cheque_payment_for_completing_settlement.py
+    Purpose: 
+    Version:
+        version: 1.0
+        Last Modified Date: 2025-03-13
+        Modified By: Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)  
+        Changes:     
+
+    Notes:
+"""
+
+
+"""
+API : C-1P48
+Name : Obtain Money Transaction
+Description : Get all money related transactions (Check RO-Negotiation, Settlement Plan)
+Created By : Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
+Created No :
+Version: 1.0
+IP : existing_case, request
+        
+OP : running_credit, running_debt, cumulative_settled_balance
+"""
+
+"""
+    Version: Python 3.12.4
+    Dependencies: Library
+    Related Files: money_transaction_type.py
+    Purpose: 
+    Version:
+        version: 1.0
+        Last Modified Date: 2025-03-07
+        Modified By: Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)  
+        Changes:     
+
+    Notes:
+"""
