@@ -1,0 +1,39 @@
+"""
+API : SET-2P01
+Name : Create Settlement Plan
+Description : Create a new settlement plan and add it to the database
+Created By : Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
+Created No :
+Version: 1.0
+IP :  settlement_id
+      created_by
+      created_on
+      settlement_phase
+      settlement_status
+      status_dtm
+      settlement_type
+      settlement_amount
+      last_monitoring_dtm
+      settlement_plan_received[]
+      settlement_plan[]
+      settlement_occurred[]
+      expire_date
+      case_id
+      ro_id
+OP : None
+*/
+"""
+
+"""
+    Version: Python 3.12.4
+    Dependencies: Library
+    Related Files: product_manager.py, product_manager_class.py, dateTimeValidator.py
+    Purpose: 
+    Version:
+        version: 1.0
+        Last Modified Date: 2024-02-17
+        Modified By: Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)  
+        Changes:     
+
+    Notes: The logic for the settlement plan creation is implemented in the create_settlement_class.py file.
+"""
