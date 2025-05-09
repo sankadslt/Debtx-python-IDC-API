@@ -6,10 +6,18 @@ API input parameter -case_id , Created_By(optional-default system_user)
 OUTPUT 
 -*Status Changes,Updating drc & approve arrays , Inserting Documents
 
-Operation :       *Update case status to 'open with agent'
-                  *add DRC
-                  *insert approval details
-                  *register drc Monitor 
+Operation :       Case details Document  -*Update case status to 'open with agent'
+                                         -*add DRC array
+                                         -*insert approval details array
+
+                  Case Monitor & case monitor log collections 
+                                         -*insert Case Monitor and case monitor Case_Monitor_log
+
+
+***Important***
+1) A rollback method is added to handle database, logic, or API failures.
+
+
 
 Collections:      *Case_details-                        -Write only
                   *tmp_forwarded_approver               -Read only
