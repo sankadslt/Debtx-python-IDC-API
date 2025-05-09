@@ -1,4 +1,4 @@
-General purpose - Case distribution to DRC (CPY-1P03) ----  [POST]
+General purpose (IDC-API) - Case distribution to DRC (CPY-1P03) [POST] 
 
 API input parameter -case_id , Created_By(optional-default system_user)
 
@@ -19,11 +19,11 @@ Operation :       Case details Document  -*Update case status to 'open with agen
 
 
 
-Collections:      *Case_details-                        -Write only
-                  *tmp_forwarded_approver               -Read only
-                  *Temp_Case_Distribution_DRC_Details   -Read & write only
-                  *Case_Monitor_log                     -Write only
-                  *Case_Monitor                         -Write only         
+Mongo Collections:      *Case_details-                        -Write only
+                        *tmp_forwarded_approver               -Read only
+                        *Temp_Case_Distribution_DRC_Details   -Read & write only
+                        *Case_Monitor_log                     -Write only
+                        *Case_Monitor                         -Write only         
 
 
 (openAPI_IDC/routes/routes.py) - API route defined
