@@ -222,7 +222,7 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
         if session and session.in_transaction:
             logger.error(f"Rolling back transaction due to db error for case id: {case_id}")
             session.abort_transaction()
-        raise DatabaseConnectionError("Database operation failed")
+        raise DatabaseConnectionError("Database operation failed") #return instead of raise
 
     except Exception as e:
         logger.error(f"Unexpected error [{type(e).__name__}]: {str(e)}")

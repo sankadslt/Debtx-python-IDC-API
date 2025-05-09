@@ -1,4 +1,4 @@
-General purpose - Case distribution to DRC (CPY-1P03)
+General purpose - Case distribution to DRC (CPY-1P03) ----  [POST]
 
 API input parameter -case_id , Created_By(optional-default system_user)
 
@@ -11,8 +11,18 @@ Operation :       *Update case status to 'open with agent'
                   *insert approval details
                   *register drc Monitor 
 
-Collections:      *Case_details-                        -Write
-                  *tmp_forwarded_approver               -Read
-                  *Temp_Case_Distribution_DRC_Details   -Read & write
-                  *Case_Monitor_log                     -Write 
-                  *Case_Monitor                         -Write                  
+Collections:      *Case_details-                        -Write only
+                  *tmp_forwarded_approver               -Read only
+                  *Temp_Case_Distribution_DRC_Details   -Read & write only
+                  *Case_Monitor_log                     -Write only
+                  *Case_Monitor                         -Write only         
+
+
+(openAPI_IDC/routes/routes.py) - API route defined
+(openAPI_IDC/services/case_distribution_to_drc_services.py - contains logic for the API)                 
+
+
+
+
+(utils/get_last_day_of_month)
+get_last_day_of_month.py - This function get_last_day_of_month takes a date and returns the last day of the same month as that date.
