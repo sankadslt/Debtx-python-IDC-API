@@ -1,7 +1,7 @@
 """
 API :  C-1P48
 Name : Obtain Money Transaction
-Description : Get all money related transactions (Check RO-Negotiation, Settlement Plan)
+Description : Get all money related transactions and handle commissions and bonus (Check RO-Negotiation, Settlement Plan)
 Created By :  Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
 Created No :
 Version: 1.0
@@ -19,9 +19,7 @@ IP :  money_transaction_id
       ro_id
         
 OP : None
-"""
 
-"""
     Version: Python 3.12.4
     Dependencies: Library
     Related Files: obtain_money_transaction.py
@@ -34,6 +32,7 @@ OP : None
 
     Notes:
 """
+
 
 """
 API : C-1P48
@@ -50,9 +49,8 @@ IP : case_id,
      ro_id
         
 OP : None
-"""
 
-"""
+
     Version: Python 3.12.4
     Dependencies: Library
     Related Files: add_commission.py
@@ -66,10 +64,11 @@ OP : None
     Notes:
 """
 
+
 """
 API : C-1P48
 Name : Obtain Money Transaction
-Description : Get all money related transactions (Check RO-Negotiation, Settlement Plan)
+Description : Get all money related transactions - add bonus (Check RO-Negotiation, Settlement Plan)
 Created By : Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
 Created No :
 Version: 1.0
@@ -84,9 +83,7 @@ IP : money_transaction_type,
      money_transaction_amount
         
 OP : None
-"""
 
-"""
     Version: Python 3.12.4
     Dependencies: Library
     Related Files: add_drc_bonus.py
@@ -104,16 +101,14 @@ OP : None
 """
 API : C-1P48
 Name : Obtain Money Transaction
-Description : Get all money related transactions (Check RO-Negotiation, Settlement Plan)
+Description : Manage when the final payment is a cheque (Check RO-Negotiation, Settlement Plan)
 Created By : Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
 Created No :
 Version: 1.0
 IP : created_dtm, request
         
 OP : None
-"""
 
-"""
     Version: Python 3.12.4
     Dependencies: Library
     Related Files: manage_cheque_payment_for_completing_settlement.py
@@ -131,16 +126,14 @@ OP : None
 """
 API : C-1P48
 Name : Obtain Money Transaction
-Description : Get all money related transactions (Check RO-Negotiation, Settlement Plan)
+Description : Get all money related transactions - calculate credit and debt (Check RO-Negotiation, Settlement Plan)
 Created By : Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
 Created No :
 Version: 1.0
 IP : existing_case, request
         
 OP : running_credit, running_debt, cumulative_settled_balance
-"""
 
-"""
     Version: Python 3.12.4
     Dependencies: Library
     Related Files: money_transaction_type.py
