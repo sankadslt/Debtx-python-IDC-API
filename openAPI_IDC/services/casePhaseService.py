@@ -40,7 +40,7 @@ def get_case_phase_logic(case_status: str):
             if end_dtm:
                 try:
                     if end_dtm < datetime.now():
-                        return JSONResponse(content={"message": "End dtm is a past date"}, status_code=200)
+                        return JSONResponse(content={"error": "Case status doesn't exist anymore"}, status_code=200)
                 except ValueError:
                     return JSONResponse(content={"error": "Invalid date format in database"}, status_code=500)
 
