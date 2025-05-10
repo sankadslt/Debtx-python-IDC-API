@@ -51,6 +51,7 @@ def get_case_phase_logic(case_status: str):
 
     except Exception as e:
         logger.exception("Error connecting to MongoDB client.")
+        return JSONResponse(content={"error": "Database connection error", "details": str(e)}, status_code=500)
 
     # Close the database connection
     finally:
