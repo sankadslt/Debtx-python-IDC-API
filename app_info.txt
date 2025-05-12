@@ -27,8 +27,8 @@ Mongo Collections:      *Case_details-                        -Write only
 
 
 (openAPI_IDC/routes/routes.py) - API route defined
-(openAPI_IDC/services/case_distribution_to_drc_services.py - contains logic for the API)                 
-
+(openAPI_IDC/services/case_distribution_to_drc_services.py) -logic operations for the API                
+(openAPI_IDC/models/case_distribution_to_drc_models.py) - Models defined
 
 
 

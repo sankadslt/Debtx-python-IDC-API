@@ -75,9 +75,7 @@ async def approved_case_distribution_to_drc_endpoint(case_id: int , Created_By:s
         return {"status code": 200, "status": "success", "message": response}
 
     except BaseCustomException as e:
-           return {
-            "status code": e.status_code,"status": "failed","message": str(e.message)
-        }
+           raise e.to_http_exception()
 
 
     except Exception as e:
