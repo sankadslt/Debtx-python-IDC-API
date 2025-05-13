@@ -59,7 +59,6 @@ logger = get_logger("Money_Manager")
 db = get_db_connection()
 
 @router.post("/Obtain_Money_Transaction", summary="Get all the money related transactions", description = """**Mandatory Fields**<br>
-- `money_transaction_id` <br>
 - `case_id` <br>
 - `settlement_id` <br>
 - `money_transaction_type` <br>
