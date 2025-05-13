@@ -43,7 +43,7 @@ from datetime import datetime, timezone, timedelta
 import pytz  
 from utils.database.connectDB import get_db_connection
 from openApi.models.obtain_money_transaction_class import Money_Transaction_Model
-from Config.database.DB_Config import money_transactions_collection, settlement_collection, ro_negotiation_collection, case_settlement_collection, case_details_collection, request_log_collection
+from Config.database.DB_Config import money_transactions_collection, settlement_collection, ro_negotiation_collection, case_settlement_collection, case_details_collection, money_transactions_rejected_collection
 from openApi.routes.money_transaction_type import variables_by_money_transaction_type
 from openApi.routes.add_drc_bonus import add_to_drc_bonus
 from openApi.routes.update_db_status import update_db_status
@@ -81,37 +81,57 @@ async def obtain_money_transaction(request:Money_Transaction_Model):
         # Checking for the settlement phase to determine the commission eligibility
         commission_eligible = True
         commission_type = "No Commission"
-        if request.case_phase not in ["Negotiation", "Mediation Board"]:
-            commission_eligible = False
-            commission_type = "No Commission"
-            
+        installment_seq = 0    
         # checking if the money_transaction_ref already exists in the db
-        existing_money_transaction = db[money_transactions_collection].find_one({"$and": [{"money_transaction_ref": request.money_transaction_ref},
-                {"money_transaction_id": request.money_transaction_id}]
-        })
-        
+        # Check account_num related transactions
+        related_transactions = list(db[money_transactions_collection].find({
+            "account_num": request.account_num
+        }))
+
+        # Check if any of them has the same money_transaction_ref
+        existing_money_transaction = next(
+            (tx for tx in related_transactions if tx["money_transaction_ref"] == request.money_transaction_ref),
+            None
+        )
+        created_dtm = datetime.now()
+        transaction_data = request.model_dump()  
+        transaction_data["created_dtm"] = created_dtm
         if existing_money_transaction:
             logger.error(f"C-1P48 - Obtain Money Transaction - Money Transaction already exists")
+            db[money_transactions_rejected_collection].insert_one(transaction_data)   #add to rejected collection
             raise ValidationError("Money Transaction already EXISTS with money_transaction_ref or money_transaction_id")
         
         #Check if the case exists in the case details
         existing_case_details = db[case_details_collection].find_one({"case_id":request.case_id})
         if not existing_case_details:
             logger.error(f"C-1P48 - Obtain Money Transaction - Case does not exist in the case details collection")
+            db[money_transactions_rejected_collection].insert_one(transaction_data)   #add to rejected collection
             raise ValidationError("Case does not exist in the case details collection - Invalid case_id")               
+        
+        if request.case_phase not in ["Negotiation", "Mediation Board"]:
+            commission_eligible = False
+            commission_type = "No Commission"
         
         #Get the case settlement by the settlement_id
         get_settlement = db[case_settlement_collection].find_one({"settlement_id": request.settlement_id})
         if get_settlement["settlement_status"] == "Completed":    
-            return HTTPException(status_code=409,detail="Settlement already completed")
+            logger.info(f"Settlement already completed payment accepting")
 
         if not get_settlement:
             logger.info(f"C-1P48 - Obtain Money Transaction - Settlement plan NOT available")
-            # raise ValidationError("Settlement plan not available")
         
         if get_settlement["settlement_phase"] not in ["Negotiation", "Mediation Board"]:
             logger.info(f"C-1P48 - Obtain Money Transaction - Settlement phase is not in Negotiation or Mediation Board")
             commission_eligible = False
+        
+        last_transaction = db[money_transactions_collection].find_one(
+            {},
+            sort=[("money_transaction_id", -1)]
+        )
+        if last_transaction and "money_transaction_id" in last_transaction:
+            money_transaction_id = last_transaction["money_transaction_id"] + 1
+        else:
+            money_transaction_id = 1
             
         #Check if the case_id exists in the money transaction collection
         existing_case = db[money_transactions_collection].find_one(
@@ -167,11 +187,9 @@ async def obtain_money_transaction(request:Money_Transaction_Model):
                     commissioned_amount = cumulative_settled_balance
                     commission_seq = 1
              
-            created_dtm = datetime.now()
             year_month_format = int(created_dtm.strftime("%Y%m"))  
-            transaction_data = request.model_dump()  
             transaction_data.update({
-                "created_dtm": created_dtm,
+                "money_transaction_id": money_transaction_id,
                 "installment_seq": installment_seq,
                 "commission_type": commission_type,
                 "running_credit": variables_by_money_transaction_type(existing_case, request)[0],
@@ -186,8 +204,8 @@ async def obtain_money_transaction(request:Money_Transaction_Model):
                 transaction_data["bonus_2"] = year_month_format
                 
             if commission_type != "No commission":
-                first_settlement = add_to_drc_bonus(request.money_transaction_type, commission_type, created_dtm, request.settlement_id, request.case_id, request.ro_id, request.money_transaction_amount, installment_seq, request.money_transaction_id, completion, request.money_transaction_amount)
-                add_to_commission(request.case_id, request.money_transaction_id, commission_type, request.money_transaction_amount, request.drc_id, request.ro_id)
+                first_settlement = add_to_drc_bonus(request.money_transaction_type, commission_type, created_dtm, request.settlement_id, request.case_id, request.ro_id, request.money_transaction_amount, installment_seq, money_transaction_id, completion, request.money_transaction_amount)
+                add_to_commission(request.case_id, money_transaction_id, commission_type, request.money_transaction_amount, request.drc_id, request.ro_id)
                 if first_settlement:
                     transaction_data["bonus_1"] = year_month_format  
             
@@ -259,10 +277,8 @@ async def obtain_money_transaction(request:Money_Transaction_Model):
                     installment_seq = plan["installment_seq"]
                     break
                 
-            transaction_data = request.model_dump()
-            created_dtm = datetime.now()
             transaction_data.update({
-                "created_dtm": created_dtm,
+                "money_transaction_id": money_transaction_id,
                 "installment_seq": installment_seq,
                 "commission_type": commission_type,
                 "running_credit": variables_by_money_transaction_type(None, request)[0],
@@ -275,8 +291,8 @@ async def obtain_money_transaction(request:Money_Transaction_Model):
             completion = True if request.money_transaction_amount >= get_settlement["settlement_plan_received"][0] else False
             #Add to DRC Bonus
             if commission_type != "No commission":
-                first_settlement = add_to_drc_bonus(request.money_transaction_type,commission_type, created_dtm, request.settlement_id, request.case_id, request.ro_id, commissioned_amount, 1, request.money_transaction_id, completion, request.money_transaction_amount)
-                add_to_commission(request.case_id, request.money_transaction_id, commission_type, commissioned_amount, request.drc_id, request.ro_id)    
+                first_settlement = add_to_drc_bonus(request.money_transaction_type,commission_type, created_dtm, request.settlement_id, request.case_id, request.ro_id, commissioned_amount, 1, money_transaction_id, completion, request.money_transaction_amount)
+                add_to_commission(request.case_id, money_transaction_id, commission_type, commissioned_amount, request.drc_id, request.ro_id)    
                 if first_settlement:
                     transaction_data["bonus_1"] = year_month_format 
                     
