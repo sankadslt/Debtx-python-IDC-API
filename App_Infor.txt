@@ -1,0 +1,14 @@
+* This is the API to return the relevant case phase when the case status is given
+
+
+/routes/casePhase.py
+get_case_phase(case_status)  |  1) This is the router endpoint of case phase API
+                                2) When this endpoint is called function get_case_phase_logic(case_status)
+
+
+/services/casePhaseService.py
+get_case_phase_logic(case_status)  |  1) This contains the logic of Case Phase API.
+                                      2) Case status is passed as the parameter
+                                      3) Validate if the case status and end_dtm are valid
+                                      4) if the case status is valid & the end dtm is not a past date
+                                         relevant case phase is returned successfully
