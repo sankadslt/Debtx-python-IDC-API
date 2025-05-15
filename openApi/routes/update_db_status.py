@@ -10,13 +10,14 @@ def update_db_status(db, request):
         db[case_details_collection].update_one({"case_id": request.case_id}, {"$set": {"case_current_status": "Complete"}})
         # db[request_log_collection].update_one({"case_id": request.case_id}, {"$set": {"request_status": "Complete", "order_id": 3}})
         #call the request log API
+        expire_dtm = db[case_details_collection].find_one({"case_id": request.case_id})["case_status"][0]["expire_dtm"]
         add_case_status = {
             "case_status": "Closed", 
-            "status_reason": None,
+            "status_reason": "Settlement Completed",
             "created_dtm": datetime.now(),
             "created_by": "admin",
             "notified_dtm": datetime.now(),
-            "expire_dtm": "2025-02-28T00:00:00.000+00:00"  # Adjust expiry date
+            "expire_dtm": expire_dtm
         }
         db[case_details_collection].update_one(
             {"case_id": request.case_id},  # Filter by case_id
