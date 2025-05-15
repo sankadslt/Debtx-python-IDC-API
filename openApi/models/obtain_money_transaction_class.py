@@ -33,7 +33,7 @@ from datetime import datetime
 
 class Money_Transaction_Model(BaseModel):
     doc_version: str = "1.0"
-    money_transaction_id: int = Field(..., alias="money_transaction_id")
+    money_transaction_id: Optional[int] = Field(None, alias="money_transaction_id")
     case_id: int = Field(..., alias="case_id")
     account_num : str = Field(..., alias="account_num")
     created_dtm: Optional[datetime] = Field(None, alias="created_dtm")
