@@ -1,0 +1,121 @@
+{
+  "Doc_Version": 1.0,
+  "Incident_Id": null,
+  "Account_Num": "12345678",
+  "Customer_Ref": "CUST-REF-001",
+  "Arrears": 1200,
+  "Arrears_Band": null,
+  "Bss_Arrears_Amount": 1200,
+  "Last_Bss_Reading_Date": "2025-05-10T17:03:08.637Z",
+  "Created_By": "Adamin",
+  "Created_Dtm": "2025-05-10T17:03:08.637Z",
+  "Incident_Status": null,
+  "Incident_Status_Dtm": null,
+  "Status_Description": null,
+  "File_Name_Dump": null,
+  "Batch_Id": null,
+  "Batch_Id_Tag_Dtm": null,
+  "External_Data_Update_On": null,
+  "Filtered_Reason": null,
+  "Export_On": null,
+  "File_Name_Rejected": null,
+  "Rejected_Reason": null,
+  "Incident_Forwarded_By": null,
+  "Incident_Forwarded_On": null,
+  "Account_Cross_Details": [],
+  "Contact_Details": [
+    {
+      "Contact_Type": "Mobile",
+      "Contact": "0893829184",
+      "Create_Dtm": "2025-05-10T17:03:08.637Z",
+      "Create_By": "Admin"
+    }
+  ],
+  "Product_Details": [
+    {
+      "Product_Label": "string",
+      "Customer_Ref": "string",
+      "Product_Seq": 1,
+      "Equipment_Ownership": null,
+      "Product_Id": "string",
+      "Product_Name": "string",
+      "Product_Status": "string",
+      "Effective_Dtm": "2025-05-10T17:03:08.637Z",
+      "Service_Address": "string",
+      "Cat": "string",
+      "Db_Cpe_Status": null,
+      "Received_List_Cpe_Status": null,
+      "Service_Type": "string",
+      "Region": null,
+      "Province": null
+    }
+  ],
+  "Customer_Details": {
+    "Customer_Name": "string",
+    "Company_Name": null,
+    "Company_Registry_Number": null,
+    "Full_Address": "string",
+    "Zip_Code": "string",
+    "Customer_Type_Name": null,
+    "Nic": null,
+    "Customer_Type_Id": 0,
+    "Customer_Type": "string"
+  },
+  "Account_Details": {
+    "Account_Status": "string",
+    "Acc_Effective_Dtm": "2025-05-10T17:03:08.637Z",
+    "Acc_Activate_Date": null,
+    "Credit_Class_Id": 11,
+    "Credit_Class_Name": "string",
+    "Billing_Centre": "string",
+    "Customer_Segment": "string",
+    "Mobile_Contact_Tel": null,
+    "Daytime_Contact_Tel": null,
+    "Email_Address": null,
+    "Last_Rated_Dtm": null
+  },
+  "Last_Actions": [
+    {
+      "Billed_Seq": 1,
+      "Billed_Created": "2025-05-10T17:03:08.637Z",
+      "Payment_Seq": 2,
+      "Payment_Created": "2025-05-10T17:03:08.637Z",
+      "Payment_Money": 0,
+      "Billed_Amount": 0
+    }
+  ],
+  "Marketing_Details": [
+    {
+      "Account_Manager": null,
+      "Consumer_Market": null,
+      "Informed_To": null,
+      "Informed_On": null
+    }
+  ],
+  "Action": null,
+  "Validity_period": null,
+  "Remark": null,
+  "updatedAt": null,
+  "Rejected_By": null,
+  "Rejected_Dtm": null,
+  "Source_Type": null,
+  "Ref_Data_Temp_Permanent": [],
+  "Case_Status": [],
+  "Approvals": [],
+  "DRC": [],
+  "RO": [],
+  "RO_Requests": [],
+  "RO_Negotiation": [],
+  "RO_Customer_Details_Edit": [],
+  "RO_CPE_Collect": [],
+  "Mediation_Board": [],
+  "Settlement": [],
+  "Money_Transactions": [],
+  "Commission_Bill_Payment": [],
+  "Bonus": [],
+  "FTL_LOD": [],
+  "Litigation": [],
+  "LOD_Final_Reminder": [],
+  "Dispute": [],
+  "Abnormal_Stop": []
+}
