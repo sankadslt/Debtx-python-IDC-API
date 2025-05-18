@@ -43,7 +43,7 @@ from datetime import datetime, timezone, timedelta
 import pytz  
 from utils.database.connectDB import get_db_connection
 from openApi.models.obtain_money_transaction_class import Money_Transaction_Model
-from Config.database.DB_Config import money_transactions_collection, settlement_collection, ro_negotiation_collection, case_settlement_collection, case_details_collection, money_transactions_rejected_collection
+from Config.database.DB_Config import money_transactions_collection, case_settlement_collection, case_details_collection, money_transactions_rejected_collection
 from openApi.routes.existing_transaction import existing_case_transaction
 from openApi.routes.new_case_transaction import new_case_transaction
 from pydantic import ValidationError
@@ -56,20 +56,15 @@ logger = get_logger("Money_Manager")
 db = get_db_connection()
 
 @router.post("/Obtain_Money_Transaction", summary="Get all the money related transactions", description = """**Mandatory Fields**<br>
-- `money_transaction_id` <br>
 - `case_id` <br>
 - `settlement_id` <br>
 - `money_transaction_type` <br>
 - `money_transaction_ref` <br>
 - `money_transaction_amount` <br>
 - `money_transaction_date` (MM/DD/YYYY HH24:MM:SS) <br>
-- `bill_payment_status` <br>
-- `case_phase` <br>
-- `drc_id` <br>
-- `ro_id` <br><br>
+- `bill_payment_status` <br><br>
 
 **Valid money_transaction_type values:** - "Bill","Adjustment","Dispute","Cash","Cheque","Return Cheque"  <br><br>
-**Valid case_phase values:** - "Negotiation", "Mediation Board", "LOD", "Litigation", "WRIT" <br><br>
 """)
 async def obtain_money_transaction(request:Money_Transaction_Model):
     logger.info("C-1P48 - Obtain Money Transaction - Request received")
@@ -103,11 +98,7 @@ async def obtain_money_transaction(request:Money_Transaction_Model):
         if not existing_case_details:
             logger.error(f"C-1P48 - Obtain Money Transaction - Case does not exist in the case details collection")
             db[money_transactions_rejected_collection].insert_one(transaction_data)   #add to rejected collection
-            raise ValidationError("Case does not exist in the case details collection - Invalid case_id")               
-        
-        if request.case_phase not in ["Negotiation", "Mediation Board"]:
-            commission_eligible = False
-            commission_type = "No Commission"
+            raise ValidationError("Case does not exist in the case details collection - Invalid case_id")             
         
         #Get the case settlement by the settlement_id
         get_settlement = db[case_settlement_collection].find_one({"settlement_id": request.settlement_id})
@@ -117,9 +108,13 @@ async def obtain_money_transaction(request:Money_Transaction_Model):
         if not get_settlement:
             logger.info(f"C-1P48 - Obtain Money Transaction - Settlement plan NOT available")
         
+        drc_id = get_settlement["drc_id"]
+        ro_id = get_settlement["ro_id"]       
+        
         if get_settlement["settlement_phase"] not in ["Negotiation", "Mediation Board"]:
             logger.info(f"C-1P48 - Obtain Money Transaction - Settlement phase is not in Negotiation or Mediation Board")
             commission_eligible = False
+            commission_type = "No Commission"
         
         last_transaction = db[money_transactions_collection].find_one(
             {},
@@ -141,11 +136,11 @@ async def obtain_money_transaction(request:Money_Transaction_Model):
         
         if existing_case:
             #case found
-            return existing_case_transaction(request, db, existing_case, existing_settlement_plan, commission_eligible, created_dtm, transaction_data, money_transaction_id, get_settlement, start_time, commission_type )
+            return existing_case_transaction(request, db, existing_case, existing_settlement_plan, commission_eligible, created_dtm, transaction_data, money_transaction_id, get_settlement, start_time, commission_type, drc_id, ro_id)
         
         else: 
             #new case
-            return new_case_transaction(request, db, start_time, created_dtm, commission_eligible, get_settlement, existing_settlement_plan, transaction_data, money_transaction_id, commission_type)
+            return new_case_transaction(request, db, start_time, created_dtm, commission_eligible, get_settlement, existing_settlement_plan, transaction_data, money_transaction_id, commission_type, drc_id, ro_id)
 
     except ValidationError as ve:
         logger.error(f"C-1P48 - Obtain Money Transaction - validation error: {ve}")

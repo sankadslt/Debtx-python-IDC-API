@@ -9,10 +9,10 @@ from datetime import datetime, timezone, timedelta
 
 logger = get_logger("Money_Manager")
 
-def new_case_transaction(request, db, start_time, created_dtm, commission_eligible, get_settlement, existing_settlement_plan, transaction_data, money_transaction_id, commission_type):
+def new_case_transaction(request, db, start_time, created_dtm, commission_eligible, get_settlement, existing_settlement_plan, transaction_data, money_transaction_id, commission_type, drc_id, ro_id):
     
     logger.info(f"C-1P48 - Obtain Money Transaction - Case does not exist in the money transaction collection")
-    negotiation = db[ro_negotiation_collection].find_one({"drc_id": request.drc_id})
+    negotiation = db[ro_negotiation_collection].find_one({"drc_id": drc_id})
     commissioned_amount = 0
     installment_seq = 0   
     year_month_format = int(created_dtm.strftime("%Y%m"))  
@@ -64,15 +64,17 @@ def new_case_transaction(request, db, start_time, created_dtm, commission_eligib
         "running_credit": variables_by_money_transaction_type(None, request)[0],
         "running_debt": variables_by_money_transaction_type(None, request)[1],
         "cumulative_settled_balance": request.money_transaction_amount,
-        "commissioned_amount": commissioned_amount
+        "commissioned_amount": commissioned_amount,
+        "drc_id": drc_id,
+        "ro_id": ro_id
     })
     db[money_transactions_collection].insert_one(transaction_data)
     
     completion = True if request.money_transaction_amount >= get_settlement["settlement_plan_received"][0] else False
     #Add to DRC Bonus
     if commission_type != "No commission":
-        first_settlement = add_to_drc_bonus(request.money_transaction_type,commission_type, created_dtm, request.settlement_id, request.case_id, request.ro_id, commissioned_amount, 1, money_transaction_id, completion, request.money_transaction_amount)
-        add_to_commission(request.case_id, money_transaction_id, commission_type, commissioned_amount, request.drc_id, request.ro_id)    
+        first_settlement = add_to_drc_bonus(request.money_transaction_type,commission_type, created_dtm, request.settlement_id, request.case_id, ro_id, commissioned_amount, 1, money_transaction_id, completion, request.money_transaction_amount)
+        add_to_commission(request.case_id, money_transaction_id, commission_type, commissioned_amount, drc_id, ro_id)    
         if first_settlement:
             transaction_data["bonus_1"] = year_month_format 
             
