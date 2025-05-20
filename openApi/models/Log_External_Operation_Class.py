@@ -1,7 +1,7 @@
 """
 API : C-1P48
 Name : Log External Operation
-Description :
+Description : API is called when there is no payments available after monitoring
 Created By : Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
 Created No :
 Version: 1.0
@@ -13,7 +13,7 @@ OP : None
 """
     Version: Python 3.12.4
     Dependencies: Library
-    Related Files: 
+    Related Files: Log_External_Operation_Class.py , Log_External_Operation.py
     Purpose: 
     Version:
         version: 1.0

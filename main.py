@@ -3,7 +3,7 @@ from loggers.loggers import get_logger
 from openApi.routes import Log_External_Operation
 import uvicorn
 
-app = FastAPI(title="IDC Transaction Money Management API", version="v1", description="""Money Management API""")
+app = FastAPI(title="IDC Monitor Manager API", version="v1", description="""Monitor Manager API""")
 logger = get_logger("MONITOR_MANAGER")
 
 app.include_router(
