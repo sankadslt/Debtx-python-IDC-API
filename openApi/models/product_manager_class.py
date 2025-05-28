@@ -12,12 +12,13 @@
 
 
 from pydantic import BaseModel, Field, validator, model_validator
-from loggers.loggers import get_logger
+from utils.logger import SingletonLogger
 from typing import List, Literal, Optional,Dict, Union
 from datetime import datetime
 from utils.validators.dateTimeValidator import human_readable_dateTime_to_datetime
 
-logger = get_logger("PRODUCT_MANAGER")
+SingletonLogger.configure()
+logger = SingletonLogger.get_logger('appLogger')
 
 
 class ProductDetail(BaseModel):

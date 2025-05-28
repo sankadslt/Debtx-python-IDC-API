@@ -5,12 +5,13 @@ from pydantic import BaseModel, ValidationError
 from typing import Dict, Any
 from openApi.routes.get_product_details import get_product_details
 from utils.exceptions_handler.custom_exception_handle import NotFoundError
-from utils.database.connectDB import get_db_connection
 from datetime import datetime
+from utils.logger import SingletonLogger
 
 router = APIRouter()
-logger = logging.getLogger("PRODUCT_MANAGER")
-db = get_db_connection()
+
+SingletonLogger.configure()
+logger = SingletonLogger.get_logger('appLogger')
 
 class ProductFilterRequest(BaseModel):
     case_id: int
