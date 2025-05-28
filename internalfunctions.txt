@@ -1,0 +1,4 @@
+
+(utils/get_next_log_id)
+get_next_log_id.py - This function retrieves the highest Interaction_Log_ID from the database and returns the next sequential ID for creating a new log entry.
+

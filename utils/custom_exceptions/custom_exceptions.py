@@ -1,10 +1,9 @@
 from utils.logger.loggers import SingletonLogger
 from fastapi import HTTPException 
 import json
-
 SingletonLogger.configure()
-
 logger = SingletonLogger.get_logger('appLogger')
+
 
 class BaseCustomException(Exception):
     """
@@ -43,12 +42,12 @@ class ValidationError(BaseCustomException):
     def __init__(self, message="Validation failed"):
         super().__init__(message)
         
-class InvalidIncidentIDError(BaseCustomException):
-    """Raised when the Incident_ID is not permitted by configuration."""
+class InvalidInteractionIDError(BaseCustomException):
+    """Raised when the Interaction_ID is not permitted by configuration."""
     
     status_code = 400
     
-    def __init__(self, message="Incident_ID is not found"):
+    def __init__(self, message="Interaction_ID is not permitted"):
         super().__init__(message)
 
 

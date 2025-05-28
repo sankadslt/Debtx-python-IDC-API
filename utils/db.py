@@ -1,6 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 import threading
-from utils.config_loader_db import config
+from utils.config_loader import config
 
 class MongoDBClient:
     _instance = None

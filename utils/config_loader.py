@@ -35,6 +35,9 @@ class ConfigLoader:
         mongo_uri_with_db_name = config.get("MONGODB", self.environment)
         self.mongo_uri, self.database_name = mongo_uri_with_db_name.rsplit("/", 1)
         
+        # Interaction ID Numbers
+        interaction_ids_raw = config.get("INTERACTION_ID_NUMBERS", "INTERACTION_ID_NUMBERS")
+        self.interaction_id_numbers = ast.literal_eval(interaction_ids_raw) if interaction_ids_raw else []
 
 # Create a shared instance on import
 config = ConfigLoader()
