@@ -1,0 +1,38 @@
+General purpose (IDC-API) - Create Cases From Incident [POST] 
+
+API input parameter -Incident_ID: int
+
+INPUT:              *Incident_ID:int , Incident document
+
+OUTPUT 
+- *inserting Case_details document
+
+Operation :         *Read Incident document
+                    *Map incident data to case details
+                    *Insert case details document into Case_details collection
+     
+Collections:        *Incident                             -Read
+                    *Case_details                         -Write
+
+
+(openAPI_IDC/routes/routes.py) - API route defined
+(openAPI_IDC/services/case_distribution_to_drc_services.py) -logic operations for the API                
+(openAPI_IDC/models/case_distribution_to_drc_models.py) - Models defined
+
+../main.py
+This is the main entry point of the file.
+
+../Incident_to_Case_v3.py
+The code inside the file is first initialize the json format and then assign the data into that.
+
+../caseTemplateLoader.py
+This file loads the versions and the case_template mentioned in the ini file.
+
+(Utils/get_next_case_id/get_next_case_id.py)
+This function returns the next sequence case_id 
+
+(Utils/map_contact_details/map_contact_details.py)
+This function maps the contact details array for the case details document
+
+(Utils/map_incident_to_case_details/map_incident_to_case_details.py)
+This function maps the case details document prior to Insert

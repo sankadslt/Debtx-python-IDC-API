@@ -1,58 +1,70 @@
+#region-Details_Template
+"""
+API :  
+Name :           Create_Cases_From_Incident   
+Description :    
+Created By :     Iman Chandrasiri(iman.chandrasiri0810@gmail.com) - API Structure, Dulhan Perera (vicksurap@gmail.com) - API Logic, Anupama Maheepala - API Logic
+Created No :
+
+Version: 1.0
+Input_parameter :  Incident_ID:int
+
+Input:           *Incident_ID:int , Incident document
+
+Output:           *inserting Case_details document
+
+Operation :         *Read Incident document
+                    *Map incident data to case details
+                    *Insert case details document into Case_details collection
+     
+Collections:        *Incident                             -Read
+                    *Case_details                         -Write
+
+*/   
+"""
+
+"""
+    Version:Python 3.12.4
+    Dependencies: Library
+    Related Files: 
+    Purpose: creating cases from incident data
+    Version:
+        version: 1.0
+        Last Modified Date: 2024-05-28
+        Modified By: Iman Chandrasiri(iman.chandrasiri0810@gmail.com)
+        Changes:     
+
+    Notes:
+"""
+#endregion-Details_Template
+#endregion-Details_Template
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, JSONResponse
-from pydantic import ValidationError
-
-from openAPI_IDC.routes.CreateIncidentRoute import router as CreateIncidentRoute
+from openAPI_IDC.routes.create_cases_from_incident_routes import router
 import uvicorn
-from utils.logger.loggers import get_logger
+from utils.db import db
+from utils.config_loader_db import config
+from utils.logger.loggers import SingletonLogger
 
-# Get the logger
-logger = get_logger("System_logger")
 
 
-# Initialize FastAPI application
 app = FastAPI()
 
-# Exception Handlers
-@app.exception_handler(ValidationError)
-async def validation_exception_handler(request, exc):
-    print(f"Validation error: {exc}")
-    return JSONResponse(
-        status_code=422,
-        content={"detail": "Validation error", "errors": exc.errors()},
-    )
 
-@app.exception_handler(Exception)
-async def generic_exception_handler(request, exc):
-    print(f"Internal server error: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error"},
-    )
+# Include router
+app.include_router(router)
 
-# Root route with a simple design
-@app.get("/", response_class=HTMLResponse)
-async def read_root():
-    return """
-    <html>
-    <head>
-        <title>Incident Management API</title>
-    </head>
-    <body style="font-family: Arial, sans-serif; text-align: center; margin-top: 50px;">
-        <h1>Welcome to the Incident Management API</h1>
-        <p>Use <b><a href="http://127.0.0.1:8000/docs" style="text-decoration: none; color: blue;">http://127.0.0.1:8000/docs</a></b> to explore the available endpoints.</p>
-    </body>
-    </html>
-    """
+@app.get("/")
+def root():
+    return {"message": "API is running"}
 
-# Include routes
-app.include_router(CreateIncidentRoute)
+
 
 def main():
-    logger.info("Starting Incident Management API")
+   
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
-
+    
 if __name__ == "__main__":
+    db_logger = SingletonLogger.get_logger('dbLogger')
     main()
 
 

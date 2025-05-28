@@ -1,0 +1,92 @@
+
+- **Start the Application**:
+  - Run the main script (`main.py`).
+
+- **Main Process**:
+  - Set up a single logging system for the application.
+  - Create two loggers: one for general app logs (`appLogger`) and one for database logs (`dbLogger`).
+  - If this is the main script being executed:
+    - Set the incident ID to 9.
+    - Process the incident with ID 9 using default settings from a configuration file.
+    - Display the result message.
+
+- **Process an Incident (`process_incident_to_case`)**:
+  - Log that the incident processing has started for the given incident ID.
+  - Try to:
+    - Connect to MongoDB using a single connection instance.
+    - If the connection fails, log an error and return a failure message.
+    - Log the successful connection and database name.
+    - Look for the incident in the MongoDB "Incident" collection using the incident ID.
+    - If no incident is found, log an error and return a failure message.
+    - Try to:
+      - Check if a case already exists for this incident ID in the "Case_details" collection.
+      - If a duplicate case is found, log an error and return a failure message.
+      - Map the incident data to case details.
+      - Get the next available case ID from the "Case_details" collection.
+      - Log the new case ID being used.
+      - Assign the new case ID to the case data.
+      - Insert the new case into the "Case_details" collection.
+      - Log the successful insertion with the case ID and MongoDB ID.
+      - Return a success message with the new case ID.
+    - If an error occurs during this process, log the error and return a failure message.
+  - If an error occurs in the main process, log the error and return a failure message.
+
+- **Map Incident to Case Details**:
+  - Log that mapping has started.
+  - Try to:
+    - Initialize an empty case details structure using the default version from the configuration.
+    - Assign values to the case details using the incident data and current timestamp.
+    - Log successful mapping and return the case details.
+  - If an error occurs, log it and re-raise the error.
+
+- **Initialize Case Details**:
+  - Log that case details initialization has started.
+  - Try to:
+    - Load a case template using the default version from the configuration.
+    - Log successful template retrieval and return the template.
+  - If an error occurs, log it and re-raise the error.
+
+- **Assign Values to Case Details**:
+  - Log that value assignment has started.
+  - Try to:
+    - Set case details fields like incident ID, account number, customer reference, timestamps, location, arrears details, action type, commission rule, last payment date, case status, filtered reason, and product details from the incident data.
+    - Create an empty list for contacts.
+    - For each contact in the incident's contact details:
+      - Log the contact type (e.g., mobile, email, landline) and value.
+      - Add the contact to the list in a structured format (e.g., mobile, email, landline, or address).
+    - If a full address exists in the incident's customer details, add it to the first contact or create a new contact entry with the address.
+    - Log the number of contacts mapped.
+    - Add a case status entry with details like status, reason, timestamps, and creator.
+    - Log the customer reference and incident ID.
+    - Log successful assignment and return the case details.
+  - If an error occurs, log it and re-raise the error.
+
+- **Get Next Case ID**:
+  - Log that the process to fetch the next case ID has started.
+  - Try to:
+    - Find the highest case ID in the "Case_details" collection.
+    - Set the next case ID as the highest ID plus 1, or 1 if no cases exist.
+    - Log the retrieved case ID and return it.
+  - If an error occurs, log it and re-raise the error.
+
+- **Load Case Template (`CaseTemplateLoader`)**:
+  - Use the app logger for logging.
+  - To load a case template:
+    - Log that template loading has started, using the provided version or default from the configuration.
+    - Try to:
+      - Locate the configuration file (`core_config.ini`) in the project’s config folder.
+      - Read the configuration file.
+      - If no version is provided, get the default version from the configuration’s `case_template` section.
+      - If the `case_template` section is missing, raise an error.
+      - Determine the configuration section based on the version (e.g., `case_template_v1`).
+      - If the section is missing, raise an error.
+      - Get the template name from the section.
+      - If no template name is specified, raise an error.
+      - Load the JSON template file from the `JSON_Templates` folder using the template name.
+      - Log successful template loading and return the template data.
+    - If the JSON file is not found, log the error and re-raise it.
+    - If the JSON file is invalid, log the error and re-raise it.
+    - If a configuration key is missing, log the error and re-raise it.
+    - For any other errors, log them and re-raise.
+
+- **End the Application**.
