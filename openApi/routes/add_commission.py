@@ -30,17 +30,20 @@ from pymongo.errors import PyMongoError
 from utils.exceptions_handler.custom_exception_handle import DatabaseError
 from loggers.loggers import get_logger
 from datetime import datetime
-from Config.database.DB_Config import commission_collection, case_details_collection
 from pymongo import DESCENDING
 
 db = get_db_connection()
 logger = get_logger("Money_Manager")
 
-def add_to_commission(case_id, money_transaction_id, commission_type, commissioning_amount, drc_id, ro_id):
+commission_collection = "Commission"
+case_details_collection ="Case_details"
+
+
+def add_to_commission(unique_key, case_id, money_transaction_id, commission_type, commissioning_amount, drc_id, ro_id):
     try:
         commission_rates = {"PEO TV": 10 / 100, "LTE": 10 / 100, "Fiber": 10 / 100}
         
-        logger.info(f"C-1P48 - Adding commission to the database.")
+        logger.info(f"{unique_key} - Adding commission to the database.")
         existing_case_details = db[case_details_collection].find_one({"case_id": case_id})
         drc_commission_rule = existing_case_details["drc_commision_rule"]    
         commission_amount = commissioning_amount * commission_rates.get(drc_commission_rule, 0)
@@ -73,8 +76,8 @@ def add_to_commission(case_id, money_transaction_id, commission_type, commission
         )
 
         db[commission_collection].insert_one(commission_data.model_dump())
-        logger.info(f"C-1P48 - Commission added successfully.")
+        logger.info(f"{unique_key} - Commission added successfully.")
         
     except PyMongoError as db_error:
-        logger.error(f"C-1P48 - Database error during update: {str(db_error)}")
+        logger.error(f"{unique_key} - Database error during update: {str(db_error)}")
         raise DatabaseError("Failed to update the database with commission.")

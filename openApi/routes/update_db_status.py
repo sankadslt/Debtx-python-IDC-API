@@ -1,7 +1,11 @@
-from Config.database.DB_Config import  settlement_collection, case_settlement_collection, case_details_collection, request_log_collection
 from datetime import datetime
 from utils.exceptions_handler.custom_exception_handle import DatabaseError
 from pymongo.errors import PyMongoError
+
+case_settlement_collection = "Case_Settlements"
+settlement_collection = "Settlements"
+request_log_collection = "Request_Log"
+case_details_collection ="Case_details"
 
 def update_db_status(db, request):
     try: 
@@ -23,6 +27,6 @@ def update_db_status(db, request):
             {"case_id": request.case_id},  # Filter by case_id
             {"$push": {"case_status": add_case_status}}
         )
-        
+
     except PyMongoError as db_error:
         raise DatabaseError("Failed to update the database with the status.")        

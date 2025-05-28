@@ -9,11 +9,11 @@ from datetime import datetime, timezone, timedelta
 
 logger = get_logger("Money_Manager")
 
-def new_case_transaction(request, db, start_time, created_dtm, commission_eligible, get_settlement, existing_settlement_plan, transaction_data, money_transaction_id, commission_type, drc_id, ro_id):
+def new_case_transaction(request, db, unique_key, start_time, created_dtm, commission_eligible, get_settlement, existing_settlement_plan, transaction_data_dict, money_transaction_id, commission_type, drc_id, ro_id):
     
-    logger.info(f"C-1P48 - Obtain Money Transaction - Case does not exist in the money transaction collection")
+    logger.info(f"{unique_key} - Obtain Money Transaction - Case does not exist in the money transaction collection")
     negotiation = db[ro_negotiation_collection].find_one({"drc_id": drc_id})
-    commissioned_amount = 0
+    commission_effective_amount = 0
     installment_seq = 0   
     year_month_format = int(created_dtm.strftime("%Y%m"))  
     #if a negotiation has happened
@@ -35,21 +35,21 @@ def new_case_transaction(request, db, start_time, created_dtm, commission_eligib
         #endregion
         if request.money_transaction_date < negotiation_created_dtm and commission_eligible:
             commission_type = "Pending Commission"
-            logger.info(f"C-1P48 - Obtain Money Transaction - Money Transaction has been recieved before the created_dtm of the negotiation")
+            logger.info(f"{unique_key} - Obtain Money Transaction - Money Transaction has been recieved before the created_dtm of the negotiation")
             
         #payment is after the negotiation     
         elif request.money_transaction_date > negotiation_created_dtm and commission_eligible:
             # #if the payment is after the negotiation, then check the transaction amount to determine the commission type 
             if get_settlement["settlement_plan_received"][0] > request.money_transaction_amount:
-                commission_type = "Unresolved Commissioned"    
-                commissioned_amount = request.money_transaction_amount        
+                commission_type = "Unresolved Commission"    
+                commission_effective_amount = request.money_transaction_amount        
             else:    
                 commission_type = "Commissioned"
-                logger.info(f"C-1P48 - Obtain Money Transaction - Money Transaction has been recieved after the created_dtm of the negotiation") 
+                logger.info(f"{unique_key} - Obtain Money Transaction - Money Transaction has been recieved after the created_dtm of the negotiation") 
                 
     #If negotiation has not happened yet                
     else:
-        logger.error(f"C-1P48 - Obtain Money Transaction - Negotiation has not happened yet")    
+        logger.error(f"{unique_key} - Obtain Money Transaction - Negotiation has not happened yet")    
         return {"message": "Negotiation has not happened yet"}
     #determine the installment_seq
     for plan in existing_settlement_plan:
@@ -57,28 +57,28 @@ def new_case_transaction(request, db, start_time, created_dtm, commission_eligib
             installment_seq = plan["installment_seq"]
             break
         
-    transaction_data.update({
+    transaction_data_dict.update({
         "money_transaction_id": money_transaction_id,
         "installment_seq": installment_seq,
         "commission_type": commission_type,
         "running_credit": variables_by_money_transaction_type(None, request)[0],
         "running_debt": variables_by_money_transaction_type(None, request)[1],
         "cumulative_settled_balance": request.money_transaction_amount,
-        "commissioned_amount": commissioned_amount,
+        "commissioning_amount": commission_effective_amount,
         "drc_id": drc_id,
         "ro_id": ro_id
     })
-    db[money_transactions_collection].insert_one(transaction_data)
+    db[money_transactions_collection].insert_one(transaction_data_dict)
     
     completion = True if request.money_transaction_amount >= get_settlement["settlement_plan_received"][0] else False
     #Add to DRC Bonus
     if commission_type != "No commission":
-        first_settlement = add_to_drc_bonus(request.money_transaction_type,commission_type, created_dtm, request.settlement_id, request.case_id, ro_id, commissioned_amount, 1, money_transaction_id, completion, request.money_transaction_amount)
-        add_to_commission(request.case_id, money_transaction_id, commission_type, commissioned_amount, drc_id, ro_id)    
+        first_settlement = add_to_drc_bonus(unique_key, request.money_transaction_type,commission_type, created_dtm, request.settlement_id, request.case_id, ro_id, commission_effective_amount, 1, money_transaction_id, completion, request.money_transaction_amount)
+        add_to_commission(unique_key, request.case_id, money_transaction_id, commission_type, commission_effective_amount, drc_id, ro_id)    
         if first_settlement:
-            transaction_data["bonus_1"] = year_month_format 
+            transaction_data_dict["bonus_1"] = year_month_format 
             
     end_time = start_time.now()
-    logger.info(f"C-1P48 - Obtain Money Transaction - total time taken: {end_time - start_time}")
-    logger.info(f"C-1P48 - Obtain Money Transaction - Money Transaction added successfully to New Case") 
+    logger.info(f"{unique_key} - Obtain Money Transaction - total time taken: {end_time - start_time}")
+    logger.info(f"{unique_key} - Obtain Money Transaction - Money Transaction added successfully to New Case") 
     return {"message": "Obtained Money Transaction added successfully - New case"}   

@@ -37,26 +37,18 @@ OP : None
     Notes:
 """
 from loggers.loggers import get_logger
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from http import HTTPStatus
-from datetime import datetime, timezone, timedelta
-import pytz  
-from utils.database.connectDB import get_db_connection
 from openApi.models.obtain_money_transaction_class import Money_Transaction_Model
-from Config.database.DB_Config import money_transactions_collection, case_settlement_collection, case_details_collection, money_transactions_rejected_collection
-from openApi.routes.existing_transaction import existing_case_transaction
-from openApi.routes.new_case_transaction import new_case_transaction
-from pydantic import ValidationError
-from pymongo import DESCENDING
-from pymongo.errors import PyMongoError
-from utils.exceptions_handler.custom_exception_handle import DatabaseError, ValidationError
+from openApi.routes.process_money_transaction import process_money_transaction
+
 
 router = APIRouter()
 logger = get_logger("Money_Manager")
-db = get_db_connection()
 
-@router.post("/Obtain_Money_Transaction", summary="Get all the money related transactions", description = """**Mandatory Fields**<br>
+@router.post("/Obtain_Money_Transaction", summary="Get all the money related transactions", description = """**Mandatory Fields**<br>          
 - `case_id` <br>
+- `account_num` <br>
 - `settlement_id` <br>
 - `money_transaction_type` <br>
 - `money_transaction_ref` <br>
@@ -66,86 +58,28 @@ db = get_db_connection()
 
 **Valid money_transaction_type values:** - "Bill","Adjustment","Dispute","Cash","Cheque","Return Cheque"  <br><br>
 """)
-async def obtain_money_transaction(request:Money_Transaction_Model):
-    logger.info("C-1P48 - Obtain Money Transaction - Request received")
-    start_time = datetime.now()
-    try:
-        # Checking for the settlement phase to determine the commission eligibility
-        commission_eligible = True
-        commission_type = "No Commission"
- 
-        # checking if the money_transaction_ref already exists in the db
-        # Check account_num related transactions
-        related_transactions = list(db[money_transactions_collection].find({
-            "account_num": request.account_num
-        }))
+#All above fields mandatory
+async def obtain_money_transaction(request:Money_Transaction_Model, background_tasks: BackgroundTasks):
+    # Check if the request is valid    
+    filtered_request_data = {
+        key: value for key, value in request.model_dump().items()
+        if key in {
+            "case_id",
+            "account_num",
+            "settlement_id",
+            "money_transaction_type",
+            "money_transaction_ref",
+            "money_transaction_amount",
+            "money_transaction_date",
+            "bill_payment_status"
+        } and value is not None
+    }
+    logger.debug("C-1P48 - Obtain Money Transaction - Request received %s",filtered_request_data)
 
-        # Check if any of them has the same money_transaction_ref
-        existing_money_transaction = next(
-            (tx for tx in related_transactions if tx["money_transaction_ref"] == request.money_transaction_ref),
-            None
-        )
-        created_dtm = datetime.now()
-        transaction_data = request.model_dump()  
-        transaction_data["created_dtm"] = created_dtm
-        if existing_money_transaction:
-            logger.error(f"C-1P48 - Obtain Money Transaction - Money Transaction already exists")
-            db[money_transactions_rejected_collection].insert_one(transaction_data)   #add to rejected collection
-            raise ValidationError("Money Transaction already EXISTS with money_transaction_ref or money_transaction_id")
-        
-        #Check if the case exists in the case details
-        existing_case_details = db[case_details_collection].find_one({"case_id":request.case_id})
-        if not existing_case_details:
-            logger.error(f"C-1P48 - Obtain Money Transaction - Case does not exist in the case details collection")
-            db[money_transactions_rejected_collection].insert_one(transaction_data)   #add to rejected collection
-            raise ValidationError("Case does not exist in the case details collection - Invalid case_id")             
-        
-        #Get the case settlement by the settlement_id
-        get_settlement = db[case_settlement_collection].find_one({"settlement_id": request.settlement_id})
-        if get_settlement["settlement_status"] == "Completed":    
-            logger.info(f"Settlement already completed payment accepting")
+    #log the request details
+    background_tasks.add_task(process_money_transaction, request)
+    return HTTPException(status_code=HTTPStatus.ACCEPTED, detail=f"Money Transaction accepted")
 
-        if not get_settlement:
-            logger.info(f"C-1P48 - Obtain Money Transaction - Settlement plan NOT available")
-        
-        drc_id = get_settlement["drc_id"]
-        ro_id = get_settlement["ro_id"]       
-        
-        if get_settlement["settlement_phase"] not in ["Negotiation", "Mediation Board"]:
-            logger.info(f"C-1P48 - Obtain Money Transaction - Settlement phase is not in Negotiation or Mediation Board")
-            commission_eligible = False
-            commission_type = "No Commission"
-        
-        last_transaction = db[money_transactions_collection].find_one(
-            {},
-            sort=[("money_transaction_id", -1)]
-        )
-        if last_transaction and "money_transaction_id" in last_transaction:
-            money_transaction_id = last_transaction["money_transaction_id"] + 1
-        else:
-            money_transaction_id = 1
-            
-        #Check if the case_id exists in the money transaction collection
-        existing_case = db[money_transactions_collection].find_one(
-            {"case_id": request.case_id, "settlement_id": request.settlement_id},  
-            sort=[("created_dtm", DESCENDING)]  # Sort by latest created_dtm
-            )
-        
-        if get_settlement and "settlement_plan" in get_settlement:
-                existing_settlement_plan = get_settlement["settlement_plan"]
-        
-        if existing_case:
-            #case found
-            return existing_case_transaction(request, db, existing_case, existing_settlement_plan, commission_eligible, created_dtm, transaction_data, money_transaction_id, get_settlement, start_time, commission_type, drc_id, ro_id)
-        
-        else: 
-            #new case
-            return new_case_transaction(request, db, start_time, created_dtm, commission_eligible, get_settlement, existing_settlement_plan, transaction_data, money_transaction_id, commission_type, drc_id, ro_id)
 
-    except ValidationError as ve:
-        logger.error(f"C-1P48 - Obtain Money Transaction - validation error: {ve}")
-        raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail=str(ve))
-        
-    except Exception as e:
-        logger.error(f"C-1P48 - Obtain Money Transaction - Unexpected error: {e}")
-        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="An unexpected error occurred.")        
+    
+    

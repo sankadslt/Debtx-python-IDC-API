@@ -5,7 +5,7 @@ Description : Get all money related transactions (Check RO-Negotiation, Settleme
 Created By : Gayana Waraketiya (gayana.waraketiya@gmail.com), Dilmi Rangana (dilmirangana1234@gmail.com)
 Created No :
 Version: 1.0
-IP : existing_case, request
+IP : money_transaction_details, request
         
 OP : running_credit, running_debt, cumulative_settled_balance
 """
@@ -26,21 +26,62 @@ OP : running_credit, running_debt, cumulative_settled_balance
     Notes:
 """
 
-def variables_by_money_transaction_type(existing_case, request):
+def variables_by_money_transaction_type(money_transaction_details, request):
     
-    plus_money_transaction_types = ["Adjustment","Dispute","Cash","Cheque"]
-    minus_money_transaction_types = ["Bill","Return Cheque"]
+    # Function to calculate running credit, running debt, and cumulative settled balance
+    # running_credit: the total amount credited to the account
+    # running_debt: the total amount debited from the account
+    # cumulative_settled_balance: the total balance after all transactions (The difference between running credit and running debt)
     
-    if existing_case:
-        running_credit = existing_case["running_credit"] + abs(request.money_transaction_amount) if request.money_transaction_type not in minus_money_transaction_types else existing_case["running_credit"]
-        running_debt = existing_case["running_debt"] if request.money_transaction_type not in minus_money_transaction_types else existing_case["running_debt"] + abs(request.money_transaction_amount)
-        cumulative_settled_balance = (running_credit - running_debt) 
-        return running_credit, running_debt, cumulative_settled_balance
-    
+    plus_money_transaction_types = ["Adjustment", "Dispute", "Cash", "Cheque"]
+    minus_money_transaction_types = ["Bill", "Return Cheque"]
+
+    cumulative_settled_balance = 0
+
+    if money_transaction_details:
+        previous_running_credit = money_transaction_details["running_credit"]
+        previous_running_debt = money_transaction_details["running_debt"]
+
+        if request.money_transaction_type in ["Adjustment", "Dispute"]:
+            if request.money_transaction_amount >= 0:
+                running_credit = previous_running_credit + abs(request.money_transaction_amount)
+                running_debt = previous_running_debt
+            else:
+                running_credit = previous_running_credit
+                running_debt = previous_running_debt + abs(request.money_transaction_amount)
+                
+        elif request.money_transaction_type in ["Cash", "Cheque"]:
+            running_credit = previous_running_credit + abs(request.money_transaction_amount)
+            running_debt = previous_running_debt
+            
+        elif request.money_transaction_type in ["Bill", "Return Cheque"]:
+            running_credit = previous_running_credit
+            running_debt = previous_running_debt + abs(request.money_transaction_amount)
+
+        if request.money_transaction_type in ["Bill", "Return Cheque"]:
+            cumulative_settled_balance = 0
+        else:
+            cumulative_settled_balance = running_credit - running_debt
+
     else:
-        running_credit = abs(request.money_transaction_amount) if request.money_transaction_type not in minus_money_transaction_types else 0
-        running_debt = 0 if request.money_transaction_type not in minus_money_transaction_types else abs(request.money_transaction_amount)
-        return running_credit, running_debt
+        if request.money_transaction_type in ["Adjustment", "Dispute"]:
+            if request.money_transaction_amount >= 0:
+                running_credit = abs(request.money_transaction_amount)
+                running_debt = 0
+            else:
+                running_credit = 0
+                running_debt = abs(request.money_transaction_amount)
+                
+        elif request.money_transaction_type in ["Cash", "Cheque"]:
+            running_credit = abs(request.money_transaction_amount)
+            running_debt = 0
+            
+        elif request.money_transaction_type in ["Bill", "Return Cheque"]:
+            running_credit = 0
+            running_debt = abs(request.money_transaction_amount)
+
+    return running_credit, running_debt, cumulative_settled_balance
+
     
     
-    # if request.money_transaction_type not in minus_money_transaction_types else 0
+# if request.money_transaction_type not in minus_money_transaction_types else 0

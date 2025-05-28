@@ -32,9 +32,10 @@ from loggers.loggers import get_logger
 
 logger = get_logger("Money_Manager")
 
-def Cheque_payment_for_completing_settlement(created_dtm, request):
+def Cheque_payment_for_completing_settlement(unique_key, created_dtm, request):
     end_date = (created_dtm + timedelta(days=14)).strftime("%d/%m/%Y %H:%M:%S")
     # API details
+    # Order id 4 : Extending the monitor date upto given period from SLT side
     api_url = "http://127.0.0.1:8001/api/v1/Create_SLT_Order"  # API URL
     payload = {
     
@@ -53,10 +54,10 @@ def Cheque_payment_for_completing_settlement(created_dtm, request):
         response = requests.post(api_url, json=payload, timeout=10)  # Sending a POST request
 
         if response.status_code == 200:
-            logger.info("C-1P48 - Successfully triggered the cheque monitoring API")
+            logger.info(f"{unique_key} - Successfully triggered the cheque monitoring API")
         else:
-            logger.error(f"C-1P48 - Failed to trigger cheque monitoring API: {response.status_code}, {response.text}")
+            logger.error(f"{unique_key} - Failed to trigger cheque monitoring API: {response.status_code}, {response.text}")
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"C-1P48 - Error calling cheque monitoring API: {e}")
+        logger.error(f"{unique_key} - Error calling cheque monitoring API: {e}")
                 

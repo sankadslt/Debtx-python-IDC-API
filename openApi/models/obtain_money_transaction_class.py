@@ -34,16 +34,16 @@ from datetime import datetime
 class Money_Transaction_Model(BaseModel):
     doc_version: str = "1.0"
     money_transaction_id: Optional[int] = Field(None, alias="money_transaction_id")
-    case_id: int = Field(..., alias="case_id")
-    account_num : str = Field(..., alias="account_num")
+    case_id: int = Field(..., alias="case_id") #MM
+    account_num : str = Field(..., alias="account_num")#MM
     created_dtm: Optional[datetime] = Field(None, alias="created_dtm")
-    settlement_id: int = Field(..., alias="settlement_id")
+    settlement_id: int = Field(..., alias="settlement_id") #MM
     installment_seq: Optional[int] = Field(0, alias="installment_seq")
-    money_transaction_type: Literal["Bill","Adjustment","Dispute","Cash","Cheque","Return Cheque"] = Field(..., alias="money_transaction_type")
-    money_transaction_ref: int = Field(..., alias="money_transaction_ref")
-    money_transaction_amount: float = Field(..., alias="money_transaction_amount")
-    money_transaction_date: datetime = Field(..., alias="money_transaction_date")
-    bill_payment_status: str = Field(..., alias="bill_payment_status")
+    money_transaction_type: Literal["Bill","Adjustment","Dispute","Cash","Cheque","Return Cheque"] = Field(..., alias="money_transaction_type") #MM
+    money_transaction_ref: int = Field(..., alias="money_transaction_ref") #MM
+    money_transaction_amount: float = Field(..., alias="money_transaction_amount")#MM
+    money_transaction_date: datetime = Field(..., alias="money_transaction_date")#MM
+    bill_payment_status: str = Field(..., alias="bill_payment_status") #MM
     case_phase: Optional[str] = Field(None, alias="case_phase")
     commission_type: Optional[str] = Field(None, alias="commission_type")
     running_credit: Optional[float] = Field(None, alias="running_credit")
@@ -51,7 +51,7 @@ class Money_Transaction_Model(BaseModel):
     cumulative_settled_balance: Optional[float] = Field(None, alias="cumulative_settled_balance")
     drc_id: Optional[int]= Field(None, alias="drc_id")
     ro_id: Optional[int] = Field(None, alias="ro_id")
-    commissioned_amount: Optional[float] = Field(None, alias="commissioned_amount")
+    commissioning_amount: Optional[float] = Field(None, alias="commissioning_amount")
     commission_issued_dtm: Optional[datetime] = Field(None, alias="commission_issued_dtm")
     commission_issued_by: Optional[str] = Field(None, alias="commission_issued_by")
     case_distribution_batch: Optional[str] = Field(None, alias="case_distribution_batch")
