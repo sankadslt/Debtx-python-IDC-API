@@ -51,7 +51,7 @@ from fastapi import FastAPI
 from pymongo.errors import PyMongoError
 from pymongo import MongoClient
 from utils.custom_exceptions.custom_exceptions import DocumentNotFoundError, DatabaseConnectionError, BaseCustomException , DataInsertError,InvalidInteractionIDError
-from utils.config_loader import config
+from utils.config_loader_db import config
 from typing import Any
 from utils.db import db 
 from utils.logger.loggers import SingletonLogger

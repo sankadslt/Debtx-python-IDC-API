@@ -51,7 +51,7 @@ from openAPI_IDC.routes.user_interaction_alert_routes import router
 import uvicorn
 
 from utils.db import db
-from utils.config_loader import config
+from utils.config_loader_db import config
 from utils.logger.loggers import SingletonLogger
 
 
