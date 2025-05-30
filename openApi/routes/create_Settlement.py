@@ -41,14 +41,13 @@ OP : None
 from loggers.loggers import get_logger
 from fastapi import APIRouter, HTTPException
 from http import HTTPStatus
-from datetime import datetime, timedelta
-import calendar    
+from dateutil.relativedelta import relativedelta 
 from utils.database.connectDB import get_db_connection
 from openApi.models.create_settlement_class import Create_Settlement_Model, settlement_model
 # from config.database.DB_Config import case_settlement_collection, settlement_collection
 from pydantic import ValidationError
 from pymongo.errors import PyMongoError
-from utils.exceptions_handler.custom_exception_handle import DatabaseError, ValidationError, NotFoundError
+from utils.exceptions_handler.custom_exception_handle import DatabaseError, ValidationError
 
 router = APIRouter()
 logger = get_logger("Settlement_Manager")
@@ -56,41 +55,27 @@ db = get_db_connection()
 
 case_settlement_collection = "Case_Settlements"
 settlement_collection = "Settlements"
+case_details_collection = "Case_details"
 
 @router.post("/Create_Settlement_Plan", summary="Create a settlement plan", description = """**Mandatory Fields**<br>
-- `settlement_id` <br>
 - `created_by` <br>
-- `created_on` (MM/DD/YYYY HH24:MM:SS) <br>
-- `settlement_phase` <br>
-- `settlement_status` <br>
+- `case_phase` <br>
 - `status_dtm` (MM/DD/YYYY HH24:MM:SS) <br>
 - `settlement_type` <br>
 - `settlement_amount` <br>
-- `last_monitoring_dtm` (MM/DD/YYYY HH24:MM:SS) <br>
 - `settlement_plan_received` <br>
-- `settlement_plan` (array) <br>
-- `settlement_occurred` (array) <br>
-- `expire_date` (MM/DD/YYYY HH24:MM:SS) <br>
 - `case_id` <br>
-- `ro_id` <br><br>
-
-**Optional Fields:**<br>
-- `drc_id` <br>
-- `status_reason` <br>
 - `remark` <br><br>
 
-**Valid settlement_status values:**<br>
-- "Open" 
-- "Open_Pending"  
-- "Active" 
-- "Withdraw"
-- "Completed"  <br><br>
+**Optional Fields:**<br>
+- `ro_id` <br>
+- `drc_id` <br>
+- `status_reason` <br><br>
+
 
 **Conditions:**<br>
 1. If `settlement_type` is `"Type A"`, then `settlement_plan_received` should be a tuple **(initial amount, total months)**.  
 2. If `settlement_type` is `"Type B"`, then `settlement_plan_received` should be a tuple **(initial amount, list of installment amounts)**.  
-3. Each `settlement_plan` entry must contain **`installment_seq`, `installment_settle_amount`, and `plan_date`**.  
-4. Each `settlement_occurred` entry must contain **`installment_seq`, `installment_settle_amount`, `plan_date`, `payment_seq`, and `installment_paid_amount`**.  
 """
 )
 async def create_settlement_plan(request:Create_Settlement_Model):
@@ -98,40 +83,58 @@ async def create_settlement_plan(request:Create_Settlement_Model):
     
     try:
         #Check if the settlement ID already exists in the database
-        logger.info("SET-2P01 - Create Settlement Plan - Checking if the request ID already exists in the database")
-        existing_settlement_plan = db[case_settlement_collection].find_one({"settlement_id": request.settlement_id})
+        logger.info("SET-2P01 - Create Settlement Plan - Checking if the case ID exists in the database")
+        existing_case = db[case_details_collection].find_one({"case_id": request.case_id})
         
         #region Add the details to the database
-        if existing_settlement_plan:
+        if not existing_case:
             #If the settlement ID already exists, raise an error
-            logger.error(f"SET-2P01 - Create Settlement Plan - Settlement ID {request.settlement_id} already exists in the database.")           
-            ValidationError(f"SET-2P01 - Create Settlement Plan - Settlement ID {request.settlement_id} already exists.") 
+            logger.error(f"SET-2P01 - Create Settlement Plan - Case ID {request.case_id} does not exist in the database.")           
+            ValidationError(f"SET-2P01 - Create Settlement Plan - Case ID {request.case_id} does not exist. Invalid case ID.") 
             return HTTPException(
-                status_code=HTTPStatus.CONFLICT, detail=f"SET-2P01 - Create Settlement Plan - Settlement ID {request.settlement_id} already exists."
+                status_code=HTTPStatus.CONFLICT, detail=f"SET-2P01 - Create Settlement Plan - Case ID {request.case_id} does not exist. Invalid case ID."
             )
-            
+        
+        #Create new settlement ID
+        logger.info("SET-2P01 - Create Settlement Plan - Creating new settlement ID")
+        latest_settlement = db[case_settlement_collection].find_one(
+            {"settlement_id": {"$exists": True}}, sort=[("settlement_id", -1)]
+        )
+        if latest_settlement:
+            new_settlement_id = latest_settlement["settlement_id"] + 1
         else:
-            try:                            
-                #Add the details to the settlement plan database
-                db[case_settlement_collection].insert_one(request.model_dump())
-                logger.info("SET-2P01 - Create Settlement Plan - Details added successfully to case settlement plan db")
-                
-                #Add the details to the settlement database
-                settlement_model_db = settlement_model(
-                    settlement_id = request.settlement_id,
-                    settlement_created_dtm = request.created_on,
-                    status = request.settlement_status,
-                    drc_id = request.drc_id,
-                    ro_id = request.ro_id
-                )
-                db[settlement_collection].insert_one(settlement_model_db.model_dump())
-                
-                return {"message": "Create Settlement Plan - Details added successfully to case settlement plan db"}
+            new_settlement_id = 1
+        
+        request.settlement_id = new_settlement_id
+        logger.info(f"SET-2P01 - Create Settlement Plan - New settlement ID created: {request.settlement_id}")    
+        
+        #assign expire date 
+        expire_dtm = request.created_on + relativedelta(months=12)
+        request.expire_date = expire_dtm
+        request.last_monitoring_dtm = request.created_on
             
-            except PyMongoError as pe:
-                logger.error(f"SET-2P01 - Create Settlement Plan - PyMongo error: {pe}")
-                raise DatabaseError(f"SET-2P01 - Create Settlement Plan - PyMongo error: {pe}")    
-        #endregion            
+        try:                        
+            #Add the details to the settlement plan database
+            db[case_settlement_collection].insert_one(request.model_dump())
+            logger.info("SET-2P01 - Create Settlement Plan - Details added successfully to case settlement plan db")
+            
+            created_dtm = request.created_on
+            #Add the details to the settlement database
+            settlement_model_db = settlement_model(
+                settlement_id = new_settlement_id,
+                settlement_created_dtm = created_dtm,
+                status = request.settlement_status,
+                drc_id = request.drc_id,
+                ro_id = request.ro_id
+            )
+            db[settlement_collection].insert_one(settlement_model_db.model_dump())
+            
+            return {"message": "Create Settlement Plan - Details added successfully to case settlement plan db"}
+        
+        except PyMongoError as pe:
+            logger.error(f"SET-2P01 - Create Settlement Plan - PyMongo error: {pe}")
+            raise DatabaseError(f"SET-2P01 - Create Settlement Plan - PyMongo error: {pe}")    
+    #endregion            
     
     except ValidationError as ve:
         logger.error(f"SET-2P01 - Create Settlement plan - validation error: {ve}")

@@ -30,26 +30,26 @@ class Settlement_plan(BaseModel):
 #case_settlement class
 class Create_Settlement_Model(BaseModel):
     
-    settlement_id: int = Field(..., alias="settlement_id")
+    settlement_id: Optional[int] = Field(None, alias="settlement_id")
     created_by: str = Field(..., alias="created_by")
-    created_on: datetime = Field(..., alias="created_on")
-    settlement_phase: Literal["Negotiation", "Mediation Board", "LOD", "Litigation", "WRIT"] = Field(..., alias="settlement_phase")
-    settlement_status: Literal["Open","Open_Pending","Active","WithDraw","Completed"] = Field(..., alias="settlement_status")
+    created_on: Optional[datetime] = Field(None, alias="created_on")
+    case_phase: Literal["Negotiation", "Mediation Board", "LOD", "Litigation", "WRIT"] = Field(..., alias="case_phase")
+    settlement_status: Optional[str] = Field("Open", alias="settlement_status")
     status_dtm: datetime = Field(..., alias="status_dtm")
     status_reason: Optional[str] = Field(None, alias="status_reason")
     settlement_type: Literal["Type A", "Type B"] = Field(..., alias="settlement_type")
     settlement_amount: float = Field(..., alias="settlement_amount")
     drc_id: Optional[int] = Field(None, alias="drc_id")
-    last_monitoring_dtm: Optional[datetime] = Field(..., alias="last_monitoring_dtm")
+    last_monitoring_dtm: Optional[datetime] = Field(None, alias="last_monitoring_dtm")
     settlement_plan_received: Union[Tuple[float, int], Tuple[float, List[float]]] = None
     settlement_plan: Optional[List[Settlement_plan]] = None
     case_id: int = Field(..., alias="case_id")
     expire_date: Optional[datetime] = Field(None, alias="expire_date")
-    remark: Optional[str] = Field(..., alias="remark")
-    ro_id: int = Field(None, alias="ro_id")
+    remark: Optional[str] = Field(None, alias="remark")
+    ro_id: Optional[int] = Field(None, alias="ro_id")
     
     #Validate date time fields on the below attributes
-    @field_validator("created_on","status_dtm", "last_monitoring_dtm","expire_date", mode='before')
+    @field_validator("status_dtm", mode='before')
     @classmethod
     def parse_effective_dtm(cls, value):
         return human_readable_dateTime_to_datetime(value)
@@ -80,11 +80,8 @@ class Create_Settlement_Model(BaseModel):
             if not isinstance(initial_amount, (int, float)) or not isinstance(total_months, int):
                 raise ValueError("settlement_plan_received must be [initial_amount, total_months]")
 
-            # Ensure created_on is a datetime object
-            created_on = values.get("created_on")
-            if isinstance(created_on, str):
-                created_on = datetime.strptime(created_on, "%m/%d/%Y %H:%M:%S")
-            values["created_on"] = created_on  # Update it in values to avoid errors later
+            created_on = datetime.now() 
+            values["created_on"] = created_on
 
             settlement_amount = values["settlement_amount"]
             if total_months < 1:
@@ -136,11 +133,9 @@ class Create_Settlement_Model(BaseModel):
               # Initialize accumulated amount
             initial_amount, installment_amounts = values["settlement_plan_received"]  # Extract values
             accumulated_amount = initial_amount
-             # Ensure created_on is a datetime object
-            created_on = values.get("created_on")
-            if isinstance(created_on, str):
-                created_on = datetime.strptime(created_on, "%m/%d/%Y %H:%M:%S")
-            values["created_on"] = created_on  # Update it in values to avoid errors later
+
+            created_on = datetime.now() 
+            values["created_on"] = created_on
             
             if created_on.day == 1:
                 first_installment_date = cls.get_last_day_of_month(created_on)
@@ -178,5 +173,5 @@ class settlement_model(BaseModel):
     settlement_created_dtm: datetime = Field(..., alias="settlement_created_dtm")
     status: str = Field(..., alias="status")
     drc_id: Optional[int] = Field(None, alias="drc_id")
-    ro_id: int = Field(None, alias="ro_id")
+    ro_id: Optional[int] = Field(None, alias="ro_id")
         
