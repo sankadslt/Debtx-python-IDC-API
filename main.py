@@ -42,10 +42,12 @@ Collections:      *Case_details-                        -Write
 from fastapi import FastAPI
 from openAPI_IDC.routes.case_distribution_to_drc_routes import router
 import uvicorn
-from utils.logger.loggers import get_logger
-from utils.config_loader import config
+from utils.logger.loggers import SingletonLogger
+from utils.config_loader_db import config
 
-logger = get_logger('CPY-1P03')
+SingletonLogger.configure() 
+
+logger = SingletonLogger.get_logger('db_logger')
 
 
 app = FastAPI()
@@ -60,14 +62,9 @@ def root():
 
 
 def main():
-    logger.info("Starting Case_Distribution_To_DRC API")
+
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
     
-    try:
-        print("Configuration values: ", config.__dict__)
-        logger.info("Configuration loaded successfully")
-    except Exception as e:
-        logger.exception(f"Failed to load configuration values: {e}")
 
 
 if __name__ == "__main__":

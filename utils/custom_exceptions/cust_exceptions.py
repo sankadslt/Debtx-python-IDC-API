@@ -1,8 +1,9 @@
-from utils.logger.loggers import get_logger
+from utils.logger.loggers import SingletonLogger
 from fastapi import HTTPException 
-import json
 
-logger=get_logger("custom exceptions")
+SingletonLogger.configure() 
+
+logger = SingletonLogger.get_logger('applogger')
 
 class BaseCustomException(Exception):
     """

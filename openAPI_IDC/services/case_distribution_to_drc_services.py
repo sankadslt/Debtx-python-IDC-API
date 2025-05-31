@@ -48,28 +48,28 @@ from dateutil.relativedelta import relativedelta
 from utils.get_last_day_of_month.get_last_day_of_month import get_last_day_of_month
 from pymongo import MongoClient
 from utils.custom_exceptions.cust_exceptions import CaseIdNotFoundError, DataFetchError, DocumentUpdateError , DatabaseConnectionError, BaseCustomException ,ValidationError
-from utils.config_loader import config
+from utils.config_loader_db import config
 from utils.db import db ,mongo_client
-from utils.logger.loggers import get_logger
-import traceback
-import json
+from utils.logger.loggers import SingletonLogger
+from utils.connectAPI import Get_API_URL_Singleton
 
+SingletonLogger.configure() 
 
+logger = SingletonLogger.get_logger('dblogger')
 
-logger = get_logger("CPY-1P03")
 
 
 def process_case_distribution_to_drc(case_id: int, Created_By: str):
     """
     Processes the case approval for distribution to DRC using MongoDB transactions.
     """
-    logger.info(f"Processing case distribution to DRC for case_id: {case_id}")
+    logger.debug(f"Processing case distribution to DRC for case_id: {case_id}")
     
     session = None
     
     try:
 
-        logger.info("Connected to MongoDB db Successfully")
+        logger.debug("Connected to MongoDB db Successfully")
         
         session = mongo_client.client.start_session()
         
@@ -143,7 +143,14 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
             
               # API Call Handling to fetch case phase
             try:
-                response = requests.get(config.get_case_phase_endpoint, params={"case_status": "Open With Agent"},timeout=10)
+                api_url_singleton = Get_API_URL_Singleton()
+                api_url = api_url_singleton.get_api_url()
+                
+                if not api_url:
+                    logger.error("API URL could not be resolved from configuration")
+                    raise ValidationError("API URL is missing or invalid in configuration")
+
+                response = requests.get(api_url, params={"case_status": "Open With Agent"},timeout=10)
                 
                  # Raise an exception for HTTP errors (e.g., 4xx or 5xx)
                 response.raise_for_status()
@@ -170,7 +177,7 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
                 raise ValidationError("Failed to fetch case phase from API")
                 
 
-            logger.info(f"Case Phase fetched for case ID {case_id}: {case_phase}")
+            logger.debug(f"Case Phase fetched for case ID {case_id}: {case_phase}")
             
             
             # Determine case monitoring expiration date (3 months ahead)
@@ -220,7 +227,7 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
         logger.error(f"Database Error: {str(e)}")
         if session and session.in_transaction:
             session.abort_transaction()
-        raise DatabaseConnectionError("Database operation failed") #return instead of raise
+        raise DatabaseConnectionError("Database operation failed") 
 
     except Exception as e:
         logger.error(f"Unexpected error [{type(e).__name__}]: {str(e)}")

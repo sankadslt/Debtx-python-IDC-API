@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 import threading
-from utils.config_loader import config  # adjust import based on your project structure
+from utils.config_loader_db import config  # adjust import based on your project structure
 
 class MongoDBClient:
     _instance = None

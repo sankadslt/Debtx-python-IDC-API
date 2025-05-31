@@ -43,12 +43,12 @@ Collections:      *Case_details-                        -Write
 
 from fastapi import APIRouter, HTTPException, Query
 from openAPI_IDC.services.case_distribution_to_drc_services import process_case_distribution_to_drc
-from utils.logger.loggers import get_logger
 from utils.custom_exceptions.cust_exceptions import BaseCustomException
+from utils.logger.loggers import SingletonLogger
 
-# Initialize logger for this API module
-logger = get_logger('CPY-1P03')
-
+# Configure the logger
+SingletonLogger.configure()
+logger = SingletonLogger.get_logger('dblogger')
 # Create an instance of APIRouter for defining API routes
 router = APIRouter()
 

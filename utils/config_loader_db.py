@@ -20,7 +20,7 @@ class ConfigLoader:
         # Find project root (you can adjust if needed)
         current_file = Path(__file__).resolve()
         project_root = current_file.parents[1]
-        core_config_file_path = project_root / "Config" / "coreConfig.ini"
+        core_config_file_path = project_root / "config" / "core_config.ini"
 
         if not core_config_file_path.exists():
             raise FileNotFoundError(f"Configuration file not found at: {core_config_file_path}")
@@ -28,14 +28,11 @@ class ConfigLoader:
         config.read(core_config_file_path)
 
         # Environment
-        self.environment = config.get("ENVIRONMENT", "DATABASE")
+        self.environment = config.get("DB_ENVIRONMENT", "DATABASE")
 
         # MongoDB URI and DB name
         mongo_uri_with_db_name = config.get("MONGODB", self.environment)
         self.mongo_uri, self.database_name = mongo_uri_with_db_name.rsplit("/", 1)
-
-        # API Endpoints
-        self.get_case_phase_endpoint = config.get("API", "GET_CASE_PHASE")
 
       
 
