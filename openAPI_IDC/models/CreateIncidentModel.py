@@ -90,7 +90,7 @@ class Incident(BaseModel):
     Account_Details: AccountDetail
     Last_Actions: List[LastAction]
     Marketing_Details: List[MarketingDetail]
-    Action: Optional[str] = None
+    Actions: Optional[str] = None
     Validity_period: Optional[int] = None
     Remark: Optional[str] = None
     updatedAt: Optional[datetime] = None
