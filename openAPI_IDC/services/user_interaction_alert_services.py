@@ -57,7 +57,7 @@ from utils.db import db
 from utils.logger.loggers import SingletonLogger
 from utils.get_next_log_id.get_next_log_id import get_next_log_id
 
-db_logger = SingletonLogger.get_logger('dbLogger')
+logger = SingletonLogger.get_logger('dbLogger')
 
 
 async def send_an_alert(
@@ -68,10 +68,10 @@ async def send_an_alert(
     parameter_array:   list[Any]
 ):
     try:
-        db_logger.debug(f"Received request to process Interaction_ID: {Interaction_ID}")
+        logger.debug(f"Received request to process Interaction_ID: {Interaction_ID}")
 
         if Interaction_ID not in config.interaction_id_numbers:
-            db_logger.error(f"Interaction_ID {Interaction_ID} is not in allowed config list.")
+            logger.error(f"Interaction_ID {Interaction_ID} is not in allowed config list.")
             raise InvalidInteractionIDError(f"Interaction_ID {Interaction_ID} is not permitted.")
 
         log_id = await get_next_log_id()
@@ -80,7 +80,7 @@ async def send_an_alert(
         # Fetch the Template_User_Interaction document
         template_user_interaction_document = await db["Template_User_Interaction_x"].find_one({"Interaction_ID": Interaction_ID})
         if not template_user_interaction_document:
-            db_logger.error(f"No Template_User_Interaction found for Interaction_ID: {Interaction_ID}")
+            logger.error(f"No Template_User_Interaction found for Interaction_ID: {Interaction_ID}")
             raise DocumentNotFoundError("Template_User_Interaction not found.")
 
         expected_parameters = template_user_interaction_document.get("parameters", [])
@@ -105,9 +105,9 @@ async def send_an_alert(
 
             try:
                 await db["User_Interaction_Log"].insert_one(interaction_log_record)
-                db_logger.info(f"Inserted error log for incompatible parameters. Log ID: {log_id}")
+                logger.info(f"Inserted error log for incompatible parameters. Log ID: {log_id}")
             except PyMongoError as e:
-                db_logger.error(f"Failed to insert error log: {str(e)}")
+                logger.error(f"Failed to insert error log: {str(e)}")
                 raise DataInsertError("Failed to insert error log", extra={"error": str(e)})
 
             return {"message": "Alert logged with parameter mismatch", "Interaction_Log_ID": log_id}
@@ -147,16 +147,16 @@ async def send_an_alert(
         try:
             await db["User_Interaction_Log"].insert_one(interaction_log_record)
             await db["User_Interaction_progress_Log"].insert_one(progress_log_record)
-            db_logger.debug(f"Inserted logs for successful interaction. Log ID: {log_id}")
+            logger.debug(f"Inserted logs for successful interaction. Log ID: {log_id}")
         except PyMongoError as e:
-            db_logger.error(f"Failed to insert logs: {str(e)}")
+            logger.error(f"Failed to insert logs: {str(e)}")
             raise DataInsertError("Failed to insert success logs", extra={"error": str(e)})
 
         return {"message": "Alert created successfully", "Interaction_Log_ID": log_id}
 
     except BaseCustomException as ce:
-        db_logger.error(f"Custom exception: {str(ce)}")
+        logger.error(f"Custom exception: {str(ce)}")
         raise
     except Exception as e:
-        db_logger.exception("Unexpected server error during alert creation")
+        logger.exception("Unexpected server error during alert creation")
         raise DatabaseConnectionError("Unexpected server error", extra={"error": str(e)})

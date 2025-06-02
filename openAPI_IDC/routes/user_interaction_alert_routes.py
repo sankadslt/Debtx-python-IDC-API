@@ -56,7 +56,7 @@ from utils.db import db
 from utils.custom_exceptions.custom_exceptions import BaseCustomException,DatabaseConnectionError
 SingletonLogger.configure()
 # Initialize logger for this API module
-db_logger = SingletonLogger.get_logger('dbLogger')
+logger = SingletonLogger.get_logger('dbLogger')
 
 # Create an instance of APIRouter for defining API routes
 router = APIRouter()
