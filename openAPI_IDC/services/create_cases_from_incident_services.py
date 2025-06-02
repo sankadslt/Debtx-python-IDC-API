@@ -118,12 +118,12 @@ def assign_case_details_values(case_details, incident_data, current_time):
 
     return case_details
 
-def map_incident_to_case_details(incident_data, case_id: int):
+def map_incident_to_case_details(incident_data, Case_ID: int):
     """Full mapping from incident to case details."""
     current_time = datetime.now()
     case_details = initialize_case_details()
     case_details = assign_case_details_values(case_details, incident_data, current_time)
-    case_details["case_id"] = case_id
+    case_details["Case_ID"] = Case_ID
     return case_details
 
 # Final API-callable function
@@ -144,13 +144,13 @@ async def create_cases_from_incident_process(Incident_ID: int):
             raise DataInsertError(f"Case already exists for incident_id: {Incident_ID}")
 
         # Get new case ID
-        case_id = await get_next_case_id()
+        Case_ID = await get_next_case_id()
 
         # Map and insert
-        case_details_document = map_incident_to_case_details(incident_document, case_id)
+        case_details_document = map_incident_to_case_details(incident_document, Case_ID)
         result = await case_details_collection.insert_one(case_details_document)
         
-                #incident document updated "Proceed on","Proceed by"
+        #incident document updated "Proceed on","Proceed by"
         incident_collection.update_one(
             {"Incident_Id": Incident_ID},
             {"$set": {
@@ -162,8 +162,8 @@ async def create_cases_from_incident_process(Incident_ID: int):
         if not result.inserted_id:
             raise DataInsertError("Failed to insert case details into the Case_details collection")
         
-        logger.info(f"Case created with case_id={case_id}, MongoDB ID={result.inserted_id}")
-        return {"message": "Case created", "case_id": case_id}
+        logger.info(f"Case created with case_id={Case_ID}, MongoDB ID={result.inserted_id}")
+        return {"message": "Case created", "case_id": Case_ID}
 
     except BaseCustomException as ce:
         logger.error(f"Custom exception occurred: {str(ce)}")

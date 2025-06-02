@@ -1,7 +1,7 @@
 import configparser
 from pathlib import Path
 import json
-from utils.logger import SingletonLogger
+from utils.logger.loggers import SingletonLogger
 
 class CaseTemplateLoader:
     _logger = SingletonLogger.get_logger('appLogger')
@@ -12,7 +12,7 @@ class CaseTemplateLoader:
         CaseTemplateLoader._logger.info("Loading case template using environment-based config")
         try:
             # Load the config file
-            project_root = Path(__file__).resolve().parents[1]
+            project_root = Path(__file__).resolve().parents[2]
             config_path = project_root / 'config' / 'core_config.ini'
             config = configparser.ConfigParser()
             config.read(str(config_path))
