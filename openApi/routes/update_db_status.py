@@ -1,6 +1,10 @@
 from datetime import datetime
 from utils.exceptions_handler.custom_exception_handle import DatabaseError
 from pymongo.errors import PyMongoError
+from utils.logger import SingletonLogger
+
+SingletonLogger.configure()
+db_logger = SingletonLogger.get_logger('dbLogger')
 
 case_settlement_collection = "Case_Settlements"
 settlement_collection = "Settlements"
@@ -29,4 +33,5 @@ def update_db_status(db, request):
         )
 
     except PyMongoError as db_error:
+        db_logger.error(f"Failed to update the database with the status: {db_error}")
         raise DatabaseError("Failed to update the database with the status.")        

@@ -1,13 +1,17 @@
-from loggers.loggers import get_logger
-from Config.database.DB_Config import money_transactions_collection, settlement_collection, ro_negotiation_collection, case_settlement_collection, case_details_collection, money_transactions_rejected_collection
 from openApi.routes.money_transaction_type import variables_by_money_transaction_type
 from openApi.routes.add_drc_bonus import add_to_drc_bonus
 from openApi.routes.update_db_status import update_db_status
 from openApi.routes.manage_cheque_payment_for_completing_settlement import Cheque_payment_for_completing_settlement
 from openApi.routes.add_commission import add_to_commission
 from datetime import datetime, timezone, timedelta
+from utils.logger import SingletonLogger
 
-logger = get_logger("Money_Manager")
+SingletonLogger.configure()
+logger = SingletonLogger.get_logger('appLogger')
+
+money_transactions_collection = "money_transactions"
+money_transactions_rejected_collection = "money_transactions_rejected"
+ro_negotiation_collection = "RO-Negotiation"
 
 def new_case_transaction(request, db, unique_key, start_time, created_dtm, commission_eligible, get_settlement, existing_settlement_plan, transaction_data_dict, money_transaction_id, commission_type, drc_id, ro_id):
     
@@ -73,8 +77,8 @@ def new_case_transaction(request, db, unique_key, start_time, created_dtm, commi
     completion = True if request.money_transaction_amount >= get_settlement["settlement_plan_received"][0] else False
     #Add to DRC Bonus
     if commission_type != "No commission":
-        first_settlement = add_to_drc_bonus(unique_key, request.money_transaction_type,commission_type, created_dtm, request.settlement_id, request.case_id, ro_id, commission_effective_amount, 1, money_transaction_id, completion, request.money_transaction_amount)
-        add_to_commission(unique_key, request.case_id, money_transaction_id, commission_type, commission_effective_amount, drc_id, ro_id)    
+        first_settlement = add_to_drc_bonus(db, unique_key, request.money_transaction_type,commission_type, created_dtm, request.settlement_id, request.case_id, ro_id, commission_effective_amount, 1, money_transaction_id, completion, request.money_transaction_amount)
+        add_to_commission(db, unique_key, request.case_id, money_transaction_id, commission_type, commission_effective_amount, drc_id, ro_id)    
         if first_settlement:
             transaction_data_dict["bonus_1"] = year_month_format 
             

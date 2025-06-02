@@ -36,15 +36,17 @@ OP : None
 
     Notes:
 """
-from loggers.loggers import get_logger
+
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from http import HTTPStatus
 from openApi.models.obtain_money_transaction_class import Money_Transaction_Model
 from openApi.routes.process_money_transaction import process_money_transaction
+from utils.logger import SingletonLogger
 
+SingletonLogger.configure()
+logger = SingletonLogger.get_logger('appLogger')
 
 router = APIRouter()
-logger = get_logger("Money_Manager")
 
 @router.post("/Obtain_Money_Transaction", summary="Get all the money related transactions", description = """**Mandatory Fields**<br>          
 - `case_id` <br>

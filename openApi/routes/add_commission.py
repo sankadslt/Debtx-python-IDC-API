@@ -25,21 +25,21 @@ OP : None
 """
 
 from openApi.models.commission_model_class import Commission_Model
-from utils.database.connectDB import get_db_connection
 from pymongo.errors import PyMongoError
 from utils.exceptions_handler.custom_exception_handle import DatabaseError
-from loggers.loggers import get_logger
 from datetime import datetime
 from pymongo import DESCENDING
+from utils.logger import SingletonLogger
 
-db = get_db_connection()
-logger = get_logger("Money_Manager")
+SingletonLogger.configure()
+logger = SingletonLogger.get_logger('appLogger')
+db_logger = SingletonLogger.get_logger('dbLogger')
 
 commission_collection = "Commission"
 case_details_collection ="Case_details"
 
 
-def add_to_commission(unique_key, case_id, money_transaction_id, commission_type, commissioning_amount, drc_id, ro_id):
+def add_to_commission(db,unique_key, case_id, money_transaction_id, commission_type, commissioning_amount, drc_id, ro_id):
     try:
         commission_rates = {"PEO TV": 10 / 100, "LTE": 10 / 100, "Fiber": 10 / 100}
         
@@ -79,5 +79,5 @@ def add_to_commission(unique_key, case_id, money_transaction_id, commission_type
         logger.info(f"{unique_key} - Commission added successfully.")
         
     except PyMongoError as db_error:
-        logger.error(f"{unique_key} - Database error during update: {str(db_error)}")
+        db_logger.error(f"{unique_key} - Database error during update: {str(db_error)}")
         raise DatabaseError("Failed to update the database with commission.")

@@ -24,20 +24,21 @@ OP : None
     Notes:
 """
 
-from utils.database.connectDB import get_db_connection
 from openApi.models.obtain_money_transaction_class import DRC_Bonus
 from pymongo import DESCENDING
 from pymongo.errors import PyMongoError
 from utils.exceptions_handler.custom_exception_handle import DatabaseError
-from loggers.loggers import get_logger
+from utils.logger import SingletonLogger
 
-db = get_db_connection()
-logger = get_logger("Money_Manager")
+SingletonLogger.configure()
+logger = SingletonLogger.get_logger('appLogger')
+db_logger = SingletonLogger.get_logger('dbLogger')
+
 drc_bonus_collection = "DRC_Bonus"
 money_transactions_collection = "money_transactions"
 
 
-def add_to_drc_bonus(unique_key, money_transaction_type,commission_type, created_dtm, settlement_id, case_id, ro_id, commissioned_amount, agent_month, money_transaction_id, completion, money_transaction_amount):
+def add_to_drc_bonus(db, unique_key, money_transaction_type,commission_type, created_dtm, settlement_id, case_id, ro_id, commissioned_amount, agent_month, money_transaction_id, completion, money_transaction_amount):
     try:
         first_settlement_complete = False
         year_month_format = int(created_dtm.strftime("%Y%m"))  
@@ -93,5 +94,5 @@ def add_to_drc_bonus(unique_key, money_transaction_type,commission_type, created
         return first_settlement_complete    
                       
     except PyMongoError as db_error:
-        logger.error(f"{unique_key} - Database error during update: {str(db_error)}")
+        db_logger.error(f"{unique_key} - Database error during update: {str(db_error)}")
         raise DatabaseError("Failed to update the database with bonus.")    

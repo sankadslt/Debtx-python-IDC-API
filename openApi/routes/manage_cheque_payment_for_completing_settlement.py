@@ -28,9 +28,10 @@ OP : None
 
 import requests
 from datetime import datetime, timedelta
-from loggers.loggers import get_logger
+from utils.logger import SingletonLogger
 
-logger = get_logger("Money_Manager")
+SingletonLogger.configure()
+logger = SingletonLogger.get_logger('appLogger')
 
 def Cheque_payment_for_completing_settlement(unique_key, created_dtm, request):
     end_date = (created_dtm + timedelta(days=14)).strftime("%d/%m/%Y %H:%M:%S")

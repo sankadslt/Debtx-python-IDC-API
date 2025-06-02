@@ -1,10 +1,13 @@
 from fastapi import FastAPI
 from openApi.routes import obtain_money_transaction
-import logging
+# import logging
+from utils.logger import SingletonLogger
 import uvicorn
 
+SingletonLogger.configure()
+logger = SingletonLogger.get_logger('appLogger')
+
 app = FastAPI(title="IDC Transaction Money Management API", version="v1", description="""Money Management API""")
-logger = logging.getLogger("Money_Manager")
 
 app.include_router(
     obtain_money_transaction.router,
