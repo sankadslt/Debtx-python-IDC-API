@@ -49,7 +49,7 @@ from utils.caseTemplateLoader.caseTemplateLoader import CaseTemplateLoader
 SingletonLogger.configure()
 
 # Define loggers at module level
-db_logger = SingletonLogger.get_logger('dbLogger')
+logger = SingletonLogger.get_logger('dbLogger')
 
 def initialize_case_details():
     """Loads the case template structure from config."""
@@ -119,7 +119,7 @@ def map_incident_to_case_details(incident_data, case_id: int):
 # Final API-callable function
 async def create_cases_from_incident_process(Incident_ID: int):
     try:
-        db_logger.debug(f"Starting case creation for Incident_ID: {Incident_ID}")
+        logger.debug(f"Starting case creation for Incident_ID: {Incident_ID}")
         
         incident_collection = db["Incident"]
         case_details_collection = db["Case_details"]
@@ -142,12 +142,12 @@ async def create_cases_from_incident_process(Incident_ID: int):
         if not result.inserted_id:
             raise DataInsertError("Failed to insert case details into the Case_details collection")
         
-        db_logger.info(f"Case created with case_id={case_id}, MongoDB ID={result.inserted_id}")
+        logger.info(f"Case created with case_id={case_id}, MongoDB ID={result.inserted_id}")
         return {"message": "Case created", "case_id": case_id}
 
     except BaseCustomException as ce:
-        db_logger.error(f"Custom exception occurred: {str(ce)}")
+        logger.error(f"Custom exception occurred: {str(ce)}")
        
     except Exception as e:
-        db_logger.exception(f"Unexpected error during case creation process:{str(e)}")
+        logger.exception(f"Unexpected error during case creation process:{str(e)}")
         
