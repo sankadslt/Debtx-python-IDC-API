@@ -18,7 +18,7 @@ def do_f1_filter_level_02_for_incident_dict(incident_dict):
         now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
         if arrears > 5000:
-            incident_dict["Incident_Status"] = "Open No agent"
+            incident_dict["Incident_Status"] = "Open No Agent"
             incident_dict["Status_Description"] = "Customer in high arrears – no agent assigned"
         elif 1000 < arrears <= 5000:
             incident_dict["Incident_Status"] = "Direct LOD"
