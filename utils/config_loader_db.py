@@ -29,7 +29,7 @@ class ConfigLoader:
         config.read(core_config_file_path)
 
         # Environment
-        self.environment = config.get("ENVIRONMENT", "DATABASE")
+        self.environment = config.get("DB_ENVIRONMENT", "DATABASE")
 
         # MongoDB URI and DB name
         mongo_uri_with_db_name = config.get("MONGODB", self.environment)

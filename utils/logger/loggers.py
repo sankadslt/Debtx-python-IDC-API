@@ -21,9 +21,9 @@ class SingletonLogger:
         config.read(str(corefig_path))
 
         # Get current environment
-        if 'environment' not in config or 'current' not in config['environment']:
-            raise ValueError("Missing [environment] section or 'current' key in corefig.ini")
-        environment = config['environment']['current'].lower()
+        if 'logger_environment' not in config or 'current' not in config['logger_environment']:
+            raise ValueError("Missing [logger_environment] section or 'current' key in corefig.ini")
+        environment = config['logger_environment']['current'].lower()
 
         # Get logger path based on environment
         logger_section = f'logger_path_{environment}'

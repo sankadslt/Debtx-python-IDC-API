@@ -57,24 +57,24 @@ def initialize_case_details():
 
 def assign_case_details_values(case_details, incident_data, current_time):
     """Assign values from incident to the case_details template."""
-    case_details["incident_id"] = incident_data.get("Incident_Id")
-    case_details["account_num"] = incident_data.get("Account_Num", "")
-    case_details["customer_ref"] = incident_data.get("Product_Details", [{}])[0].get("Customer_Ref", "CUST-REF-UNKNOWN")
-    case_details["created_dtm"] = current_time
-    case_details["implemented_dtm"] = current_time
-    case_details["area"] = incident_data.get("Product_Details", [{}])[0].get("Province", "Unknown")
-    case_details["arrears_band"] = incident_data.get("Arrears_Band", "AB-UNKNOWN")
-    case_details["bss_arrears_amount"] = incident_data.get("Arrears", 0.0)
-    case_details["current_arrears_amount"] = incident_data.get("Arrears", 0.0)
-    case_details["current_arrears_band"] = incident_data.get("current_arrears_band", "Default Band")
-    case_details["action_type"] = incident_data.get("Actions", "Recovery")
-    case_details["drc_commision_rule"] = incident_data.get("drc_commision_rule", "Unknown")
-    case_details["last_payment_date"] = incident_data.get("Last_Actions", {}).get("Payment_Created")
-    case_details["case_current_status"] = incident_data.get("Incident_Status", "Open No Agent")
-    case_details["filtered_reason"] = incident_data.get("Filtered_Reason", None)
-    case_details["ref_products"] = incident_data.get("Product_Details", [])
+    case_details["Incident_ID"] = incident_data.get("Incident_Id")
+    case_details["Account_Num"] = incident_data.get("Account_Num", "")
+    case_details["Customer_Ref"] = incident_data.get("Product_Details", [{}])[0].get("Customer_Ref", "CUST-REF-UNKNOWN")
+    case_details["Created_dtm"] = current_time
+    case_details["Implemented_dtm"] = current_time
+    case_details["Area"] = incident_data.get("Product_Details", [{}])[0].get("Province", "Unknown")
+    case_details["Arrears_Band"] = incident_data.get("Arrears_Band", "AB-UNKNOWN")
+    case_details["BSS_Arrears_Amount"] = incident_data.get("Arrears", 0.0)
+    case_details["Current_Arrears_Amount"] = incident_data.get("Arrears", 0.0)
+    case_details["Current_Arrears_Band"] = incident_data.get("current_arrears_band", "Default Band")
+    case_details["Action_type"] = incident_data.get("Actions", "Recovery")
+    case_details["DRC_Commision_Rule"] = incident_data.get("drc_commision_rule", "Unknown")
+    case_details["Last_Payment_Date"] = incident_data.get("Last_Actions", {}).get("Payment_Created")
+    case_details["Case_Current_Status"] = incident_data.get("Incident_Status", "Open No Agent")
+    case_details["Filtered_reason"] = incident_data.get("Filtered_Reason", None)
+    case_details["Ref_Products"] = incident_data.get("Product_Details", [])
     case_details["updatedAt"] = current_time
-
+        
     contacts = []
     for contact in incident_data.get("Contact_Details", []):
         contact_type = contact.get("Contact_Type")
@@ -93,18 +93,28 @@ def assign_case_details_values(case_details, incident_data, current_time):
         else:
             contacts.append({"mob": "", "email": "", "lan": "", "address": full_address})
     
-    case_details["contact"] = contacts
+    case_details["Contact"] = contacts
+    
+    # Map Incident_Status to Case_Status with specific rules
+    incident_status = incident_data.get("Incident_Status", "Open No Agent")
+    if incident_status == "Direct LOD":
+        mapped_status = "LIT Prescribed"
+    elif incident_status == "Open CPE Collect":
+        mapped_status = "Open No Agent"
+    else:
+        mapped_status = incident_status  # Keep "Open No Agent" or other statuses as is
 
-    # Add status history
-    case_status_entry = {
-        "case_status": incident_data.get("Incident_Status", "Open No Agent"),
-        "status_reason": incident_data.get("Status_Description", "Pending"),
-        "created_dtm": incident_data.get("Incident_Status_Dtm"),
-        "created_by": incident_data.get("Created_By", "admin"),
-        "notified_dtm": current_time,
-        "expire_dtm": None
-    }
-    case_details["case_status"].append(case_status_entry)
+
+        # Add Case_Status entry
+        case_status_entry = {
+            "case_status": mapped_status,
+            "status_reason": incident_data.get("Status_Description", "Pending"),
+            "created_dtm": incident_data.get("Incident_Status_Dtm"),
+            "created_by": incident_data.get("Created_By", "admin"),
+            "notified_dtm": current_time,
+            "expire_dtm": None
+        }
+        case_details["Case_Status"].append(case_status_entry)
 
     return case_details
 
@@ -139,6 +149,16 @@ async def create_cases_from_incident_process(Incident_ID: int):
         # Map and insert
         case_details_document = map_incident_to_case_details(incident_document, case_id)
         result = await case_details_collection.insert_one(case_details_document)
+        
+                #incident document updated "Proceed on","Proceed by"
+        incident_collection.update_one(
+            {"Incident_Id": Incident_ID},
+            {"$set": {
+                "Proceed_On": datetime.now(),
+                "Proceed_By": "System"
+            }}
+        )
+        
         if not result.inserted_id:
             raise DataInsertError("Failed to insert case details into the Case_details collection")
         
