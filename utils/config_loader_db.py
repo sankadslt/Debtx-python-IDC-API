@@ -36,5 +36,8 @@ class ConfigLoader:
         self.mongo_uri, self.database_name = mongo_uri_with_db_name.rsplit("/", 1)
         
 
+
+        
+
 # Create a shared instance on import
 config = ConfigLoader()
