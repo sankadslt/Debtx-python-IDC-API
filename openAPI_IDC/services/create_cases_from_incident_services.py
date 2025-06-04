@@ -39,12 +39,15 @@ Collections:        *Incident                             -Read
 #endregion-Details_Template
 
 from datetime import datetime
-from utils.custom_exceptions.custom_exceptions import BaseCustomException, DocumentNotFoundError , DataInsertError
+from utils.custom_exceptions.custom_exceptions import BaseCustomException, DocumentNotFoundError , DataInsertError, InvalidDataError
 from utils.config_loader_db import config
+from fastapi.responses import JSONResponse
 from utils.db import db 
+from utils.timezone.sl_time_zone import get_sri_lanka_time
 from utils.get_next_case_id.get_next_case_id import get_next_sequence
 from utils.logger.loggers import SingletonLogger
 from utils.caseTemplateLoader.caseTemplateLoader import CaseTemplateLoader
+from utils.validation.validation import get_incident_document , check_existing_case
 
 SingletonLogger.configure()
 
@@ -120,7 +123,7 @@ def assign_case_details_values(case_details, incident_data, current_time):
 
 def map_incident_to_case_details(incident_data, Case_ID: int):
     """Full mapping from incident to case details."""
-    current_time = datetime.now()
+    current_time = get_sri_lanka_time()
     case_details = initialize_case_details()
     case_details = assign_case_details_values(case_details, incident_data, current_time)
     case_details["Case_ID"] = Case_ID
@@ -134,17 +137,19 @@ async def create_cases_from_incident_process(Incident_ID: int):
         incident_collection = db["Incident"]
         case_details_collection = db["Case_details"]
 
-        incident_document = await incident_collection.find_one({"Incident_ID": Incident_ID})
-        if not incident_document:
-            raise DocumentNotFoundError(f"No incident document found with Incident_ID: {Incident_ID}")
+        #check if a document with the given Incident_ID exists
+        incident_document = await get_incident_document(db, Incident_ID)
         
-        # Check for duplicates
-        existing_case = await case_details_collection.find_one({"Incident_ID": Incident_ID})
-        if existing_case:
-            raise DataInsertError(f"Case already exists for Incident_ID: {Incident_ID}")
-
+        
+        #check if a case already exists for the given Incident_ID
+        await check_existing_case(db, Incident_ID)
+        
+        
         # Get new case ID
         Case_ID = await get_next_sequence(db,sequence_name="case_id")
+        
+        if not Case_ID:
+            raise InvalidDataError("Failed to retrieve a new Case_ID from the sequence generator")
 
         # Mapping incident data to case details
         case_details_document = map_incident_to_case_details(incident_document, Case_ID)
@@ -156,7 +161,7 @@ async def create_cases_from_incident_process(Incident_ID: int):
         incident_collection.update_one(
             {"Incident_ID": Incident_ID},
             {"$set": {
-                "Proceed_On": datetime.now(),
+                "Proceed_On": get_sri_lanka_time(),
                 "Proceed_By": "DRS-Admin"
             }}
         )
@@ -165,11 +170,15 @@ async def create_cases_from_incident_process(Incident_ID: int):
             raise DataInsertError("Failed to insert case details into the Case_details collection")
         
         logger.info(f"Case created with case_id={Case_ID}, MongoDB ID={result.inserted_id}")
-        return {"message": "Case created", "case_id": Case_ID}
-
+        return JSONResponse(
+            status_code=202,
+            content ={"status":"success" ,"message": "Case created", "case_id": Case_ID}
+        )
+        
     except BaseCustomException as ce:
-        logger.error(f"Custom exception occurred: {str(ce)}")
+        logger.error(f"Custom exception occurred: {str(ce)}")     
+
        
     except Exception as e:
         logger.exception(f"Unexpected error during case creation process:{str(e)}")
-        
+    

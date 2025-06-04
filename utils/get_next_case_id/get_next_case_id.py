@@ -6,3 +6,4 @@ async def get_next_sequence(db, sequence_name: str) -> int:
             return_document=True
         )
         return result["seq"]
+    

@@ -137,3 +137,11 @@ class NotModifiedResponse(BaseCustomException):
     
     def __init__(self, message="Not Modified Response"):
         super().__init__(message)
+
+class InvalidDataError(BaseCustomException):
+    """Raised when invalid or missing data is encountered."""
+
+    status_code = 400
+
+    def __init__(self, message="Invalid or missing data encountered"):
+        super().__init__(message)
