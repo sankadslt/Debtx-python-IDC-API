@@ -18,10 +18,10 @@ class CaseTemplateLoader:
             config.read(str(config_path))
 
             # Get the current environment
-            if 'case_template_environment' not in config or 'current' not in config['case_template_environment']:
-                raise KeyError("Missing [case_template_environment] section or 'current' key in core_config.ini")
+            if 'environment' not in config or 'current' not in config['environment']:
+                raise KeyError("Missing [environment] section or 'current' key in core_config.ini")
 
-            env = config['case_template_environment']['current'].lower()
+            env = config['environment']['current'].lower()
             section = f'case_template_{env}'
 
             if section not in config:
