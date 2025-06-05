@@ -9,8 +9,8 @@ from utils.logger import SingletonLogger
 SingletonLogger.configure()
 logger = SingletonLogger.get_logger('appLogger')
 
-money_transactions_collection = "money_transactions"
-money_transactions_rejected_collection = "money_transactions_rejected"
+money_transactions_collection = "Money_Transactions"
+money_transactions_rejected_collection = "Money_Transactions_Rejected"
 ro_negotiation_collection = "RO-Negotiation"
 
 def new_case_transaction(request, db, unique_key, start_time, created_dtm, commission_eligible, get_settlement, existing_settlement_plan, transaction_data_dict, money_transaction_id, commission_type, drc_id, ro_id):

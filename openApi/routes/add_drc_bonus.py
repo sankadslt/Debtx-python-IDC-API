@@ -35,11 +35,12 @@ logger = SingletonLogger.get_logger('appLogger')
 db_logger = SingletonLogger.get_logger('dbLogger')
 
 drc_bonus_collection = "DRC_Bonus"
-money_transactions_collection = "money_transactions"
+money_transactions_collection = "Money_Transactions"
 
 
 def add_to_drc_bonus(db, unique_key, money_transaction_type,commission_type, created_dtm, settlement_id, case_id, ro_id, commissioned_amount, agent_month, money_transaction_id, completion, money_transaction_amount):
     try:
+        logger.info(f"{unique_key} - Obtain Money Transaction - Adding to DRC_Bonus collection")
         first_settlement_complete = False
         year_month_format = int(created_dtm.strftime("%Y%m"))  
         highest_bonus = db[drc_bonus_collection].find_one(
@@ -54,13 +55,12 @@ def add_to_drc_bonus(db, unique_key, money_transaction_type,commission_type, cre
                 "money_transaction_type": {"$nin": ["Bill"]}  # Exclude Bill 
             }, sort=[("created_dtm", DESCENDING)]  # Get the most recent valid transaction
         )
-
         # if not latest_commissioned_transaction and commission_type == "Commissioned":
         if (latest_valid_transaction["installment_seq"] == 1 and commission_type == "Commissioned") or completion:
             if money_transaction_type in ["Adjustment","Dispute","Cash","Cheque"]:
                 if not completion:
                     first_settlement_complete = True
-                drc_bonus_data = DRC_Bonus(
+                    drc_bonus_data = DRC_Bonus(
                     bonus_seq = highest_bonus_seq + 1,
                     created_dtm = created_dtm, 
                     case_id = case_id,
@@ -72,6 +72,7 @@ def add_to_drc_bonus(db, unique_key, money_transaction_type,commission_type, cre
                     bonus_status= True,
                     bonus_status_on= created_dtm,
                 )
+                logger.info(f"{unique_key} - Obtain Money Transaction - First installment bonus data: {drc_bonus_data.model_dump()}")
                 db[drc_bonus_collection].insert_one(drc_bonus_data.model_dump())
                 logger.info(f"{unique_key} - Obtain Money Transaction - Bonus added to DRC_Bonus collection") 
             

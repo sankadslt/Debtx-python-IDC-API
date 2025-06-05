@@ -36,12 +36,60 @@ logger = SingletonLogger.get_logger('appLogger')
 db_logger = SingletonLogger.get_logger('dbLogger')
 
 commission_collection = "Commission"
-case_details_collection ="Case_details"
+case_details_collection = "Case_details"
+caterlogue_collection = "Commission_Caterlogue"
+payment_rate_collection = "Commission_Payment_Rate"
+cpe_rate_collection = "Commission_CPE_Rate"
 
 
 def add_to_commission(db,unique_key, case_id, money_transaction_id, commission_type, commissioning_amount, drc_id, ro_id):
     try:
-        commission_rates = {"PEO TV": 10 / 100, "LTE": 10 / 100, "Fiber": 10 / 100}
+        logger.info(f"{unique_key} - Starting commission addition process.")
+
+        commission_action = "payment"
+        logger.info(f"{unique_key} - Commission action set to: {commission_action}")
+
+        matched_caterlogue = db[caterlogue_collection].find_one(
+            {"commission_action": commission_action},
+            sort=[("caterlog_id", DESCENDING)])
+        logger.info(f"{unique_key} - Matching catalogue entries for action: {matched_caterlogue}")
+        
+        # matched_caterlogue = list(matched_caterlogue)
+        # logger.info(f"{unique_key} - Matched catalogue entries: {matched_caterlogue}")
+        if not matched_caterlogue:
+            raise DatabaseError(f"No matching catalogue entry found for action: {commission_action}")
+        
+        caterlog_id = matched_caterlogue["caterlog_id"]
+        logger.info(f"{unique_key} - Found caterlog_id: {caterlog_id} for action: {commission_action}")
+
+
+        if commission_action == "payment":
+            max_rate_entry = db[payment_rate_collection].find_one(
+                {"caterlog_id": caterlog_id},
+                sort=[("commission_payment_rate_id", DESCENDING)]
+            )
+            commission_payment_rate_id = max_rate_entry["commission_payment_rate_id"]
+            logger.info(f"{unique_key} - Commission payment rate ID: {commission_payment_rate_id}")
+        
+        # elif commission_action == "cpe":
+        #     max_rate_entry = db[cpe_rate_collection].find_one(
+        #         {"caterlog_id": caterlog_id},
+        #     sort=[("commission_cpe_rate_id", DESCENDING)]
+        #     )
+        #     commission_cpe_rate_id = max_rate_entry["commission_cpe_rate_id"]
+        #     logger.info(f"{unique_key} - Commission CPE rate ID: {commission_cpe_rate_id}")
+
+        else:
+            raise DatabaseError(f"Unsupported commission action: {commission_action}")
+
+        if not max_rate_entry or "commission_rate" not in max_rate_entry:
+            raise DatabaseError(f"Commission rate not found for catalog_id: {caterlog_id}")
+
+        commission_rates = max_rate_entry["commission_rate"]
+        logger.info(f"{unique_key} - Commission rates: {commission_rates}")
+
+
+        # commission_rates = {"PEO TV": 10 / 100, "LTE": 10 / 100, "Fiber": 10 / 100}
         
         logger.info(f"{unique_key} - Adding commission to the database.")
         existing_case_details = db[case_details_collection].find_one({"case_id": case_id})
@@ -56,9 +104,9 @@ def add_to_commission(db,unique_key, case_id, money_transaction_id, commission_t
         commission_data = Commission_Model(
             commission_seq = commission_seq + 1,
             created_dtm = datetime.now(),
-            commission_action = "Payment",
-            catalog_id=0,
-            commission_pay_rate_id=0,
+            commission_action = "payment",
+            caterlog_id= caterlog_id,
+            commission_payment_rate_id= commission_payment_rate_id,
             commission_ref = drc_commission_rule,
             transaction_ref =  money_transaction_id,
             case_id = case_id,

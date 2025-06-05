@@ -57,8 +57,8 @@ db_logger = SingletonLogger.get_logger('dbLogger')
 
 case_details_collection ="Case_details"
 case_settlement_collection = "Case_Settlements"
-money_transactions_collection = "money_transactions"
-money_transactions_rejected_collection = "money_transactions_rejected"
+money_transactions_collection = "Money_Transactions"
+money_transactions_rejected_collection = "Money_Transactions_Rejected"
 
 def process_money_transaction(request):
     # Function to process the money transaction
@@ -85,6 +85,7 @@ def process_money_transaction(request):
                 
                 #Check if the case exists in the case details
                 existing_case_details = db[case_details_collection].find_one({"case_id":request.case_id})
+                logger.info("f"f"{unique_key} - Obtain Money Transaction - Case details found")
                 if not existing_case_details:
                     logger.error(f"{unique_key} - Obtain Money Transaction - Case does not exist in the case details collection")
                     db[money_transactions_rejected_collection].insert_one(transaction_data_dict)   #add to rejected collection
@@ -100,6 +101,7 @@ def process_money_transaction(request):
                     "account_num": request.account_num,
                     "money_transaction_ref": request.money_transaction_ref
                 })
+                logger.info(f"{unique_key} - Obtain Money Transaction - Checking for existing money transaction")
 
                 if existing_money_transaction:
                     logger.error(f"{unique_key} - Obtain Money Transaction - Money Transaction already exists")
@@ -108,6 +110,7 @@ def process_money_transaction(request):
                             
                 #Get the case settlement by the settlement_id
                 get_settlement = db[case_settlement_collection].find_one({"settlement_id": request.settlement_id})
+                logger.info(f"{unique_key} - Obtain Money Transaction - Checking for existing settlement")
                 
                 if not get_settlement:
                     #No settlement found
@@ -134,6 +137,7 @@ def process_money_transaction(request):
                     {},
                     sort=[("money_transaction_id", -1)]
                 )
+                logger.info(f"{unique_key} - Obtain Money Transaction - Checking for last transaction")
                 if last_transaction and "money_transaction_id" in last_transaction:
                     money_transaction_id = last_transaction["money_transaction_id"] + 1
                 else:
@@ -145,9 +149,11 @@ def process_money_transaction(request):
                     {"case_id": request.case_id, "settlement_id": request.settlement_id},  
                     sort=[("created_dtm", DESCENDING)]  # Sort by latest created_dtm
                     )
+                logger.info(f"{unique_key} - Obtain Money Transaction - Checking for existing money transaction details")
                 
                 if get_settlement and "settlement_plan" in get_settlement:
                         settlement_plan = get_settlement["settlement_plan"]
+                logger.info(f"{unique_key} - Obtain Money Transaction - Settlement plan obtained")
                 
                 if money_transaction_details:
                     #case found

@@ -10,8 +10,8 @@ from utils.logger import SingletonLogger
 SingletonLogger.configure()
 logger = SingletonLogger.get_logger('appLogger')
 
-money_transactions_collection = "money_transactions"
-money_transactions_rejected_collection = "money_transactions_rejected"
+money_transactions_collection = "Money_Transactions"
+money_transactions_rejected_collection = "Money_Transactions_Rejected"
 
 def existing_case_transaction(request, db, unique_key, money_transaction_details, settlement_plan, commission_eligible, created_dtm, transaction_data_dict, money_transaction_id, get_settlement, start_time, commission_type, drc_id, ro_id):
     
@@ -89,7 +89,8 @@ def existing_case_transaction(request, db, unique_key, money_transaction_details
         "ro_id": ro_id
     })
     
-    logger.info(f"{unique_key} - Obtain Money Transaction - commission_type: {commission_type}, commission_eligible: {commission_eligible}") 
+    logger.info(f"{unique_key} - Obtain Money Transaction - commission_type: {commission_type}, commission_eligible: {commission_eligible}")
+
     completion = False
     if cumulative_settled_balance >= get_settlement["settlement_amount"]:
         completion = True
