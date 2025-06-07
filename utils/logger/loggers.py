@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import logging
+from datetime import datetime
 import logging.config
 import configparser
 
@@ -32,7 +33,12 @@ class SingletonLogger:
 
         log_dir = Path(config[logger_section]['log_dir'])
         log_dir.mkdir(parents=True, exist_ok=True)
-        log_file_path = (log_dir / "default.log").as_posix()  # Use as_posix() for consistent formatting
+        
+        # Generate dynamic log file name with current date
+        today_str = datetime.now().strftime('%Y%m%d')
+        log_file_name = f"{today_str}_money_manager.log"
+        log_file_path = (log_dir / log_file_name).as_posix()
+        
 
         print(f"Logger Path: {log_file_path} (env: {environment})")
 

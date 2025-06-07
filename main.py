@@ -44,7 +44,7 @@ import uvicorn
 from utils.db import db
 from utils.config_loader_db import config
 from utils.logger.loggers import SingletonLogger
-from utils.port_singleton_config import  ServerConfigLoader
+from utils.server_host_port_config import  ServerConfigLoader
 
 SingletonLogger.configure()
 logger = SingletonLogger.get_logger('appLogger')

@@ -170,10 +170,7 @@ async def create_cases_from_incident_process(Incident_ID: int):
             raise DataInsertError("Failed to insert case details into the Case_details collection")
         
         logger.info(f"Case created with case_id={Case_ID}, MongoDB ID={result.inserted_id}")
-        return JSONResponse(
-            status_code=202,
-            content ={"status":"success" ,"message": "Case created", "case_id": Case_ID}
-        )
+
         
     except BaseCustomException as ce:
         logger.error(f"Custom exception occurred: {str(ce)}")     
