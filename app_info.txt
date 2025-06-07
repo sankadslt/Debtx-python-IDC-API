@@ -2,6 +2,12 @@ General purpose (IDC-API) - Create Cases From Incident [POST]
 
 API input parameter -Incident_ID: int
 
+json_format-
+                    {
+                    "Incident_ID": 123
+                    }
+
+
 INPUT:              *Incident_ID:int , Incident document
 
 OUTPUT 
