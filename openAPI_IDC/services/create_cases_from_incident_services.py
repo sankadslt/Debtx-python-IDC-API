@@ -129,7 +129,7 @@ def map_incident_to_case_details(incident_data, Case_ID: int):
     case_details["Case_ID"] = Case_ID
     return case_details
 
-# Final API-callable function
+# Main function to create cases from incident data
 async def create_cases_from_incident_process(Incident_ID: int):
     try:
         logger.debug(f"Starting case creation for Incident_ID: {Incident_ID}")
