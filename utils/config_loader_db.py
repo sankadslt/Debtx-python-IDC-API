@@ -16,7 +16,7 @@ class ConfigLoader:
         return cls._instance
 
     def _initialize(self):
-        self._config = configparser.ConfigParser()
+        self._config = configparser.RawConfigParser()
 
         # Get path to core_config.ini
         current_file = Path(__file__).resolve()
