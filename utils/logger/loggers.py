@@ -36,7 +36,7 @@ class SingletonLogger:
         
         # Generate dynamic log file name with current date
         today_str = datetime.now().strftime('%Y%m%d')
-        log_file_name = f"{today_str}_money_manager.log"
+        log_file_name = f"{today_str}_incident_to_case_API.log"
         log_file_path = (log_dir / log_file_name).as_posix()
         
 
