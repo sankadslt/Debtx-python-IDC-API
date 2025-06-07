@@ -56,6 +56,7 @@ from typing import Any
 from utils.db import db 
 from utils.logger.loggers import SingletonLogger
 from utils.get_next_log_id.get_next_log_id import get_next_log_id
+from utils.Template_number_config import TemplateConfigLoader
 
 logger = SingletonLogger.get_logger('dbLogger')
 
@@ -70,7 +71,7 @@ async def send_an_alert(
     try:
         logger.debug(f"Received request to process Interaction_ID: {Interaction_ID}")
 
-        if Interaction_ID not in config.interaction_id_numbers:
+        if Interaction_ID not in TemplateConfigLoader.load_template_numbers():
             logger.error(f"Interaction_ID {Interaction_ID} is not in allowed config list.")
             raise InvalidInteractionIDError(f"Interaction_ID {Interaction_ID} is not permitted.")
 

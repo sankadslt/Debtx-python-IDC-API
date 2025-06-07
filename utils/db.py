@@ -15,9 +15,12 @@ class MongoDBClient:
         return cls._instance
 
     def _initialize(self):
-        self.client = AsyncIOMotorClient(config.mongo_uri)
-        self.db = self.client[config.database_name]
+        mongo_uri = config.get_env_value("mongodb", "uri")
+        db_name = config.get_env_value("mongodb", "db_name")
 
-# Shared async MongoDB instance
+        self.client = AsyncIOMotorClient(mongo_uri)
+        self.db = self.client[db_name]
+        
 mongo_client = MongoDBClient()
-db = mongo_client.db
+db = mongo_client.db        
+    
