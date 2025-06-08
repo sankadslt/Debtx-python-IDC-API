@@ -53,12 +53,16 @@ import uvicorn
 from utils.db import db
 from utils.config_loader_db import config
 from utils.logger.loggers import SingletonLogger
+from utils.server_host_port_config import ServerConfigLoader
 
 
 
 
 
 app = FastAPI()
+
+logger = SingletonLogger.get_logger('dbLogger')
+SingletonLogger.configure()
 
 # Include router
 app.include_router(router)
@@ -70,11 +74,15 @@ def root():
 
 
 def main():
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    try:
+        host,port = ServerConfigLoader.load_server_config()
+    except Exception as e:
+        logger.debug(f"Error loading server configuration: {e}")
+        return
+    uvicorn.run("main:app", host=host, port=port, reload=True)
     
 
 if __name__ == "__main__":
-    db_logger = SingletonLogger.get_logger('dbLogger')
     main()
 
 
