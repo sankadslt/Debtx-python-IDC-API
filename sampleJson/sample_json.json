@@ -1,0 +1,10 @@
+{
+  "case_id": 111,
+  "account_num": "123456789",
+  "settlement_id": 8,
+  "money_transaction_type": "Cash",
+  "money_transaction_ref": 27,
+  "money_transaction_amount": 2000,
+  "money_transaction_date": "03/20/2025 12:14:19",
+  "bill_payment_status": "ok"
+}
