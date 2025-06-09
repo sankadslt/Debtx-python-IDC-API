@@ -22,7 +22,7 @@ class MongoDBConnectionSingleton:
           # Load connection details from config
           project_root = Path(__file__).resolve().parents[1]
           config_path = project_root / 'config' / 'core_config.ini'
-          config = configparser.ConfigParser()
+          config = configparser.RawConfigParser()
           config.read(str(config_path))
 
           if 'environment' not in config or 'current' not in config['environment']:
