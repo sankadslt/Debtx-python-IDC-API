@@ -56,7 +56,7 @@ from typing import Any
 from utils.db import db 
 from utils.logger.loggers import SingletonLogger
 from utils.timezone.sl_time_zone import get_sri_lanka_time
-from utils.get_next_log_id.get_next_log_id import get_next_log_id
+from utils.get_next_log_id.get_next_log_id import get_next_sequence
 from utils.Template_number_config import TemplateConfigLoader
 
 logger = SingletonLogger.get_logger('dbLogger')
@@ -76,7 +76,7 @@ async def send_an_alert(
             logger.error(f"Interaction_ID {Interaction_ID} is not in allowed config list.")
             raise InvalidInteractionIDError(f"Interaction_ID {Interaction_ID} is not permitted.")
 
-        log_id = await get_next_log_id()
+        log_id = await get_next_sequence(db,sequence_name="log_id")
         now = get_sri_lanka_time()
 
         # Fetch the Template_User_Interaction document
