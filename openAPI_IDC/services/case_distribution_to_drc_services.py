@@ -193,7 +193,7 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
                 "Created_dtm": created_dtm,
                 "Case_Phase": case_phase, 
                 "Monitor_Expir_Dtm": monitor_expir_dtm,
-                "Last_Monitor_Dtm": datetime.utcnow(),
+                "Last_Monitor_Dtm": get_sri_lanka_time(),
             }, session=session)
             
             logger.info(f"Case monitor log inserted for case_id: {case_id}")
@@ -207,7 +207,7 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
                 "Created_By": Created_By,
                 "Case_Phase": case_phase, 
                 "Monitor_Expir_Dtm": monitor_expir_dtm,
-                "Last_Monitor_Dtm": datetime.utcnow(), 
+                "Last_Monitor_Dtm": get_sri_lanka_time(), 
                 "Last_Requested_On": None
             }, session=session)
             #endregion
