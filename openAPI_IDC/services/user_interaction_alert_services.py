@@ -79,7 +79,7 @@ async def send_an_alert(
         now = datetime.utcnow()
 
         # Fetch the Template_User_Interaction document
-        template_user_interaction_document = await db["Template_User_Interaction_x"].find_one({"Interaction_ID": Interaction_ID})
+        template_user_interaction_document = await db["Template_User_Interaction"].find_one({"Interaction_ID": Interaction_ID})
         if not template_user_interaction_document:
             logger.error(f"No Template_User_Interaction found for Interaction_ID: {Interaction_ID}")
             raise DocumentNotFoundError("Template_User_Interaction not found.")
