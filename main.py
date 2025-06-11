@@ -44,6 +44,7 @@ from openAPI_IDC.routes.case_distribution_to_drc_routes import router
 import uvicorn
 from utils.logger.loggers import SingletonLogger
 from utils.config_loader_db import config
+from utils.server_host_port_config import ServerConfigLoader
 
 SingletonLogger.configure() 
 
@@ -62,8 +63,12 @@ def root():
 
 
 def main():
+    try:
+        host,port = ServerConfigLoader.load_server_config()
+    except Exception as e:
+        logger.debug(f"Failed to load server config:{e}")    
 
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host=host, port=port, reload=True)
     
 
 

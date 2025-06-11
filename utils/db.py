@@ -1,6 +1,6 @@
-from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 import threading
-from utils.config_loader_db import config  # adjust import based on your project structure
+from utils.config_loader_db import config
 
 class MongoDBClient:
     _instance = None
@@ -15,9 +15,12 @@ class MongoDBClient:
         return cls._instance
 
     def _initialize(self):
-        self.client = MongoClient(config.mongo_uri)
-        self.db = self.client[config.database_name]
+        mongo_uri = config.get_env_value("mongodb", "uri")
+        db_name = config.get_env_value("mongodb", "db_name")
 
-# Shared instance
+        self.client = AsyncIOMotorClient(mongo_uri)
+        self.db = self.client[db_name]
+        
 mongo_client = MongoDBClient()
-db = mongo_client.db
+db = mongo_client.db        
+    

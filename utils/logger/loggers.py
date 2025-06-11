@@ -3,6 +3,7 @@ import os
 import logging
 import logging.config
 import configparser
+from datetime import datetime
 
 class SingletonLogger:
     _instances = {}
@@ -21,9 +22,9 @@ class SingletonLogger:
         config.read(str(corefig_path))
 
         # Get current environment
-        if 'logger_environment' not in config or 'current' not in config['logger_environment']:
-            raise ValueError("Missing [logger_environment] section or 'current' key in corefig.ini")
-        environment = config['logger_environment']['current'].lower()
+        if 'environment' not in config or 'current' not in config['environment']:
+            raise ValueError("Missing [environment] section or 'current' key in corefig.ini")
+        environment = config['environment']['current'].lower()
 
         # Get logger path based on environment
         logger_section = f'logger_path_{environment}'
@@ -32,7 +33,13 @@ class SingletonLogger:
 
         log_dir = Path(config[logger_section]['log_dir'])
         log_dir.mkdir(parents=True, exist_ok=True)
-        log_file_path = (log_dir / "default.log").as_posix()  # Use as_posix() for consistent formatting
+        
+          # Generate dynamic log file name with current date
+        today_str = datetime.now().strftime('%Y%m%d')
+        log_file_name = f"{today_str}_case_distribution_to_drc_API.log"
+        log_file_path = (log_dir / log_file_name).as_posix()
+        
+
 
         print(f"Logger Path: {log_file_path} (env: {environment})")
 

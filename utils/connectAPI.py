@@ -24,10 +24,10 @@ class Get_API_URL_Singleton:
             self.config = configparser.ConfigParser()
             self.config.read(str(config_path))
             
-            if 'api_environment' not in self.config or 'current' not in self.config['api_environment']:
-                raise KeyError("Missing 'api_environment' section or 'current' key in config file.")
+            if 'environment' not in self.config or 'current' not in self.config['environment']:
+                raise KeyError("Missing 'environment' section or 'current' key in config file.")
             
-            self.environment = self.config['api_environment']['current'].lower()
+            self.environment = self.config['environment']['current'].lower()
         except Exception as e:
             print(f"Error loading configuration: {e}")
             self.config = None

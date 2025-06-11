@@ -1,6 +1,7 @@
 from pathlib import Path
 import configparser
 import threading
+import ast
 
 class ConfigLoader:
     _instance = None
@@ -15,9 +16,9 @@ class ConfigLoader:
         return cls._instance
 
     def _initialize(self):
-        config = configparser.ConfigParser()
+        self._config = configparser.RawConfigParser()
 
-        # Find project root (you can adjust if needed)
+        # Get path to core_config.ini
         current_file = Path(__file__).resolve()
         project_root = current_file.parents[1]
         core_config_file_path = project_root / "config" / "core_config.ini"
@@ -25,16 +26,28 @@ class ConfigLoader:
         if not core_config_file_path.exists():
             raise FileNotFoundError(f"Configuration file not found at: {core_config_file_path}")
 
-        config.read(core_config_file_path)
+        self._config.read(core_config_file_path)
 
-        # Environment
-        self.environment = config.get("DB_ENVIRONMENT", "DATABASE")
+        # Read active environment from [env] section
+        try:
+            self.environment = self._config.get("environment", "current")
+        except (configparser.NoSectionError, configparser.NoOptionError) as e:
+            raise RuntimeError("Missing [environment] section or 'current' key in config file") from e
 
-        # MongoDB URI and DB name
-        mongo_uri_with_db_name = config.get("MONGODB", self.environment)
-        self.mongo_uri, self.database_name = mongo_uri_with_db_name.rsplit("/", 1)
+    def get_env_value(self, section_prefix, key):
+        section = f"{section_prefix}_{self.environment}"
+        if not self._config.has_section(section):
+            raise KeyError(f"Missing section: [{section}] in config.")
+        if not self._config.has_option(section, key):
+            raise KeyError(f"Missing key '{key}' in section [{section}]")
+        return self._config.get(section, key)
 
-      
+    def get_value(self, section: str, key: str) -> str:
+        if not self._config.has_section(section):
+            raise KeyError(f"Missing section: [{section}] in config.")
+        if not self._config.has_option(section, key):
+            raise KeyError(f"Missing key '{key}' in section [{section}]")
+        return self._config.get(section, key)
 
-# Create a shared instance on import
+# Shared instance
 config = ConfigLoader()
