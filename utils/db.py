@@ -1,4 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import MongoClient
 import threading
 from utils.config_loader_db import config
 
@@ -18,7 +19,7 @@ class MongoDBClient:
         mongo_uri = config.get_env_value("mongodb", "uri")
         db_name = config.get_env_value("mongodb", "db_name")
 
-        self.client = AsyncIOMotorClient(mongo_uri)
+        self.client = MongoClient(mongo_uri)
         self.db = self.client[db_name]
         
 mongo_client = MongoDBClient()
