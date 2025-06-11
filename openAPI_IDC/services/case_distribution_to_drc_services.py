@@ -87,11 +87,11 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
                 raise DataFetchError(f"case_distribution_batch_id not found for case details {case_id}")
             
               # Fetch approver details
-            approver_collection = db.tmp_forwarded_approver
+            approver_collection = db.Template_forwarded_approver
             approver_document = approver_collection.find_one({"approver_reference": case_distribution_batch_id}, session=session)
             
             # Fetch DRC details
-            drc_collection = db.Tmp_Case_Distribution_DRC_Details
+            drc_collection = db.Template_case_distribution_drc_details
             drc_document = drc_collection.find_one({"case_id": case_id}, session=session)
 
             if not drc_document:
