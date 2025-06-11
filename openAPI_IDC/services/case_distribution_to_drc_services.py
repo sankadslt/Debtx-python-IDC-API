@@ -52,6 +52,7 @@ from utils.config_loader_db import config
 from utils.db import db ,mongo_client
 from utils.logger.loggers import SingletonLogger
 from utils.connectAPI import Get_API_URL_Singleton
+from utils.timezone.sl_time_zone import get_sri_lanka_time
 
 SingletonLogger.configure() 
 
@@ -104,7 +105,7 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
              # Update 'proceed_on' field in the DRC collection
             drc_collection.update_one(
                 {"case_id": case_id},
-                {"$set": {"proceed_on": datetime.utcnow()}},
+                {"$set": {"proceed_on": get_sri_lanka_time()}},
                 session=session
             )
             
@@ -122,8 +123,8 @@ def process_case_distribution_to_drc(case_id: int, Created_By: str):
                     "case_status": {"case_status": "Open With Agent"},
                     "drc": {
                         "DRC_status": "Open With Agent",
-                        "Created_dtm": datetime.utcnow(),
-                        "status_dtm": datetime.utcnow(),
+                        "Created_dtm": get_sri_lanka_time(),
+                        "status_dtm": get_sri_lanka_time(),
                         "drc_id": drc_id,
                     },
                     "approve": {
