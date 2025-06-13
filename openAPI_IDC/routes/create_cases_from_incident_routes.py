@@ -43,6 +43,7 @@ from fastapi.responses import JSONResponse
 from fastapi import status
 from utils.config_loader_db import config
 from utils.logger.loggers import SingletonLogger
+from openAPI_IDC.models.create_cases_from_incident_model import CreateCaseResponse
 from utils.custom_exceptions.custom_exceptions import BaseCustomException,DatabaseConnectionError
 
 
@@ -58,8 +59,10 @@ router = APIRouter()
 
 @router.post("/Create_Cases_From_Incident/" ,
              summary="Create Cases From Incident",
-             description="Create cases from incident data,Params:Incident_ID:int")
-async def create_cases_from_incident(Incident_ID: int , background_tasks:BackgroundTasks):
+             description="Create cases from incident data,Params:Incident_ID:int",
+             response_model=CreateCaseResponse,
+             status_code=status.HTTP_200_OK)
+def create_cases_from_incident(incident_id: int ):
     """
     Endpoint to create cases from incident data.
 
@@ -71,15 +74,15 @@ async def create_cases_from_incident(Incident_ID: int , background_tasks:Backgro
     """
     try:
         # Call the service function to create cases from incident
-        background_tasks.add_task(
-            create_cases_from_incident_process,
-            Incident_ID
-        )
-        return JSONResponse(
-            status_code=status.HTTP_202_ACCEPTED,
-            content={"detail":f"Case creation initiated for Incident ID: {Incident_ID}"}
+            result =create_cases_from_incident_process(incident_id)
             
-            )
+            return CreateCaseResponse(
+                detail="Case created successfully",
+                incident_id= incident_id,
+                case_id=result.get("case_id")
+            
+            
+        )
 
     except BaseCustomException as e:
         # Handle custom exceptions and return appropriate HTTP response
