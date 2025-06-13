@@ -79,12 +79,12 @@ class DataInsertError(BaseCustomException):
         super().__init__(message)
 
 
-class NoValidDataError(BaseCustomException):
-    """Raised when no valid data is available for insertion."""
+class DataNotFoundError(BaseCustomException):
+    """Raised when no valid data is found"""
     
     status_code = 400
     
-    def __init__(self, message="No valid data to insert"):
+    def __init__(self, message="No Data found"):
         super().__init__(message)
 
 

@@ -47,7 +47,7 @@ from utils.timezone.sl_time_zone import get_sri_lanka_time
 from utils.get_next_case_id.get_next_case_id import get_next_sequence
 from utils.logger.loggers import SingletonLogger
 from utils.caseTemplateLoader.caseTemplateLoader import CaseTemplateLoader
-from utils.validation.validation import get_incident_document , check_existing_case
+from utils.validation.validation import get_incident_document , check_existing_case , check_existing_account_number
 
 SingletonLogger.configure()
 
@@ -143,6 +143,9 @@ def create_cases_from_incident_process(Incident_Id: int) -> dict:
         
         #check if a case already exists for the given Incident_ID
         check_existing_case(db, Incident_Id)
+        
+        #check whether account number exists
+        check_existing_account_number(db , incident_document, Incident_Id)
         
         
         # Get new case ID
