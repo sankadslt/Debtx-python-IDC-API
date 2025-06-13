@@ -130,19 +130,19 @@ def map_incident_to_case_details(incident_data, case_id: int):
     return case_details
 
 # Main function to create cases from incident data
-def create_cases_from_incident_process(incident_id: int) -> dict:
+def create_cases_from_incident_process(Incident_Id: int) -> dict:
     try:
-        logger.debug(f"Starting case creation for incident_id: {incident_id}")
+        logger.debug(f"Starting case creation for Incident_Id: {Incident_Id}")
         
         incident_collection = db["Incident"]
         case_details_collection = db["Case_details"]
 
         #check if a document with the given Incident_ID exists
-        incident_document =  get_incident_document(db, incident_id)
+        incident_document =  get_incident_document(db, Incident_Id)
         
         
         #check if a case already exists for the given Incident_ID
-        check_existing_case(db, incident_id)
+        check_existing_case(db, Incident_Id)
         
         
         # Get new case ID
@@ -161,7 +161,7 @@ def create_cases_from_incident_process(incident_id: int) -> dict:
         
         #incident document updated "Proceed on","Proceed by"
         incident_collection.update_one(
-            {"Incident_ID": incident_id},
+            {"Incident_Id": Incident_Id},
             {"$set": {
                 "Proceed_On": get_sri_lanka_time(),
                 "Proceed_By": "DRS-Admin",
@@ -175,7 +175,7 @@ def create_cases_from_incident_process(incident_id: int) -> dict:
         logger.info(f"Case created with case_id={case_id}, MongoDB ID={result.inserted_id}")
    
         return{
-            "incident_id": incident_id,
+            "Incident_Id": Incident_Id,
             "case_id":case_id
         }
         

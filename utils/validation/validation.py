@@ -2,15 +2,15 @@ from utils.custom_exceptions.custom_exceptions import DocumentNotFoundError, Dat
 from utils.config_loader_db import config
 from utils.db import db
 
-async def get_incident_document(db, incident_id: int):
+def get_incident_document(db, Incident_Id: int):
     incident_collection = db["Incident"]
-    incident_document = await incident_collection.find_one({"Incident_ID": incident_id})
+    incident_document = incident_collection.find_one({"Incident_Id": Incident_Id})
     if not incident_document:
         raise DocumentNotFoundError(f"No incident document found with Incident_ID: {incident_id}")
     return incident_document
 
-async def check_existing_case(db, incident_id: int):
+def check_existing_case(db, Incident_Id: int):
     case_details_collection = db["Case_details"]
-    existing_case = await case_details_collection.find_one({"Incident_ID": incident_id})
+    existing_case = case_details_collection.find_one({"incident_id": Incident_Id})
     if existing_case:
-        raise DataInsertError(f"Case already exists for Incident_ID: {incident_id}")
+        raise DataInsertError(f"Case already exists for Incident_ID: {Incident_Id}")
