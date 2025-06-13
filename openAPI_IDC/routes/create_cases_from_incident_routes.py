@@ -62,6 +62,7 @@ router = APIRouter()
              description="Create cases from incident data,Params:Incident_ID:int",
              response_model=CreateCaseResponse,
              status_code=status.HTTP_200_OK)
+
 def create_cases_from_incident(Incident_Id: int ):
     """
     Endpoint to create cases from incident data.

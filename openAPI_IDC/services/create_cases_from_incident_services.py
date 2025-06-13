@@ -154,7 +154,6 @@ def create_cases_from_incident_process(Incident_Id: int) -> dict:
         if not case_id:
             raise InvalidDataError("Failed to retrieve a new case_id from the sequence generator")
         
-        #check whether account number exists
         
         # Mapping incident data to case details
         case_details_document = map_incident_to_case_details(incident_document, case_id)
