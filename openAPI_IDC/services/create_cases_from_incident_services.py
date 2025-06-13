@@ -144,7 +144,7 @@ def create_cases_from_incident_process(Incident_Id: int) -> dict:
         #check if a case already exists for the given Incident_ID
         check_existing_case(db, Incident_Id)
         
-        #check whether account number exists
+        #check whether account number exists in case details collection
         check_existing_account_number(db , incident_document, Incident_Id)
         
         
