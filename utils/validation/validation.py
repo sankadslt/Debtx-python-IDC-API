@@ -6,7 +6,7 @@ def get_incident_document(db, Incident_Id: int):
     incident_collection = db["Incident"]
     incident_document = incident_collection.find_one({"Incident_Id": Incident_Id})
     if not incident_document:
-        raise DocumentNotFoundError(f"No incident document found with Incident_ID: {incident_id}")
+        raise DocumentNotFoundError(f"No incident document found with Incident_ID: {Incident_Id}")
     return incident_document
 
 def check_existing_case(db, Incident_Id: int):
